@@ -1,0 +1,17 @@
+.*.swp
+*~
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+*.mod
+*.o
+
+data/
+data
+fast_data/
+fast_data
+
+plots/
+plots

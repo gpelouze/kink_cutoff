@@ -1,0 +1,17 @@
+init_hs_equil:
+  arch: Linux.gcc.defs
+  pluto_ini:
+    output_dir: ./init_hs_equil
+    log_dir: ./init_hs_equil
+    file_type: multiple_files
+  definitions:
+    INIT_DOMAIN_FUNCTION: INIT_DOMAIN_SOLVE_HS_EQUIL
+
+solve:
+  arch: Linux.mpicc.defs
+  pluto_ini:
+    output_dir: ./output
+    log_dir: ./log
+    file_type: single_file
+  definitions:
+    INIT_DOMAIN_FUNCTION: INIT_DOMAIN_LOAD_HS_EQUIL
