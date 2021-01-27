@@ -306,7 +306,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
         // corrections for temperature-pressure
         #if CH_BOUNDARY_PRS_RHO == CH_STRATIFICATION
         Temp = d->Vc[PRS][k][j-1][i]/d->Vc[RHO][k][j-1][i];
-        strat = CONST_gsun * sin( 0.5*CONST_PI*x2[j-1]/g_inputParam[HALF_LOOP_L] );
+        strat = CONST_gsun;
         d->Vc[PRS][k][j][i] =  d->Vc[PRS][k][j-1][i] + fabs(x2[j]-x2[j-1])*strat*d->Vc[RHO][k][j-1][i];
         d->Vc[RHO][k][j][i] =  d->Vc[PRS][k][j][i]/Temp;
         #endif
@@ -370,6 +370,6 @@ double BodyForcePotential(double x1, double x2, double x3)
  *********************************************************************** */
 {
   double L = g_inputParam[HALF_LOOP_L];
-  return CONST_gsun*L/(0.5*CONST_PI) * cos(0.5*CONST_PI*x2/L);
+  return CONST_gsun * (L - x2);
 }
 #endif
