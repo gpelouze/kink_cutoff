@@ -2,7 +2,7 @@
 #define  DIMENSIONS              2
 #define  COMPONENTS              2
 #define  GEOMETRY                CARTESIAN
-#define  BODY_FORCE              VECTOR
+#define  BODY_FORCE              POTENTIAL
 #define  FORCED_TURB             NO
 #define  COOLING                 NO
 #define  RECONSTRUCTION          LINEAR
