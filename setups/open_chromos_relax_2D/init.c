@@ -352,7 +352,7 @@ void BodyForceVector(double *v, double *g, double x1, double x2, double x3)
  *********************************************************************** */
 {
   g[IDIR] = 0.0;
-  g[JDIR] = 0.0;
+  g[JDIR] = CONST_gsun;
   g[KDIR] = 0.0;
 }
 
@@ -369,7 +369,6 @@ double BodyForcePotential(double x1, double x2, double x3)
  *
  *********************************************************************** */
 {
-  double L = g_inputParam[HALF_LOOP_L];
-  return CONST_gsun * (L - x2);
+  return 0.0;
 }
 #endif
