@@ -91,6 +91,32 @@ double step_function(double x1, double r) {
 }
 
 /* ********************************************************************* */
+void HsEquilBodyForceVector(double *v, double *g, double x1, double x2, double x3)
+/*!
+ * Prescribe the body force vector to be used by InitDomainSolveHsEquil from
+ * vector and potential body force definitions.
+ *
+ * \param [in] v  pointer to a cell-centered vector of primitive variables
+ * \param [out] g acceleration vector
+ * \param [in] x1  position in the 1st coordinate direction \f$x_1\f$
+ * \param [in] x2  position in the 2nd coordinate direction \f$x_2\f$
+ * \param [in] x3  position in the 3rd coordinate direction \f$x_3\f$
+ *
+ *********************************************************************** */
+{
+  #if BODY_FORCE == NO
+  g[IDIR] = 0.0;
+  g[JDIR] = 0.0;
+  g[KDIR] = 0.0;
+  #elif BODY_FORCE == VECTOR
+  BodyForceVector(v, g, x1, x2, x3);
+  #else
+  printf(" ! Initial hs equil is not implemented for non-vector body force\n");
+  QUIT_PLUTO(1);
+  #endif
+}
+
+/* ********************************************************************* */
 void InitDomainSolveHsEquil (Data *d, Grid *grid)
 /*!
  * Assign initial condition by looping over the computational domain.
@@ -140,7 +166,7 @@ void InitDomainSolveHsEquil (Data *d, Grid *grid)
   KDOM_LOOP(k) IDOM_LOOP(i) {
     NVAR_LOOP(nv) {
       v[nv] = d->Vc[nv][k][JEND][i];
-      BodyForceVector(v, g, x1[i], x2[JEND], x3[k]);
+      HsEquilBodyForceVector(v, g, x1[i], x2[JEND], x3[k]);
       }
     step_prs = step_function(x1[i], g_inputParam[STEP_rprs]);
     mu = MeanMolecularWeight(v);
@@ -154,7 +180,7 @@ void InitDomainSolveHsEquil (Data *d, Grid *grid)
   DOM_LOOP_REV(k, j, i) {
     NVAR_LOOP(nv) {
       v[nv] = d->Vc[nv][k][j][i];
-      BodyForceVector(v, g, x1[i], x2[j], x3[k]);
+      HsEquilBodyForceVector(v, g, x1[i], x2[j], x3[k]);
       }
     mu = MeanMolecularWeight(v);
     ds = x2[j-1] - x2[j];
