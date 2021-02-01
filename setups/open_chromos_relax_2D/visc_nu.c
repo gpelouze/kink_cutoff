@@ -27,5 +27,8 @@ void Visc_nu(double *v, double x1, double x2, double x3,
       * (g_time - g_inputParam[t_Re_ramp]) / (tstop - g_inputParam[t_Re_ramp]);
     *nu1 = 1e8*1e7*UNIT_DENSITY/exp(logRe);
   }
+  if (x2 < 60.) {
+    *nu1 = 1e8*1e7*UNIT_DENSITY/1e8; // vscale*lscale*rhoscale/Re
+  }
   *nu2 = 0.0;
 }
