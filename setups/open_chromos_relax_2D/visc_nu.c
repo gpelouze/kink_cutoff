@@ -28,7 +28,7 @@ void Visc_nu(double *v, double x1, double x2, double x3,
     *nu1 = 1e8*1e7*UNIT_DENSITY/exp(logRe);
   }
   if (x2 < 60.) {
-    *nu1 = 1e8*1e7*UNIT_DENSITY/1e8; // vscale*lscale*rhoscale/Re
+    *nu1 = 1e8*1e7*UNIT_DENSITY/1e8 * atan((60. - x2)/0.1) / CONST_PI * 2.;
   }
   *nu2 = 0.0;
 }
