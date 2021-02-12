@@ -318,6 +318,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   int   i, j, k, nv;
   double  *x1, *x2, *x3;
   double Temp, strat;
+  double av, av_min;
 
   double radius = g_inputParam[STEP_R];
 
@@ -359,12 +360,14 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
     }
   }
 
+  av_min = g_inputParam[VRW_AMIN];
   if (side == X2_END){
     TOT_LOOP(k, j, i) {
-      if (x2[j] < 10.) {
-        EXPAND( d->Vc[VX1][k][j][i] *= 0.9; ,
-                d->Vc[VX2][k][j][i] *= 0.9; ,
-                d->Vc[VX3][k][j][i] *= 0.9; )
+      if (x2[j] < g_inputParam[VRW_XMAX]) {
+        av = av_min + (1. - av_min) / g_inputParam[VRW_XMAX] * x2[j];
+        EXPAND( d->Vc[VX1][k][j][i] *= av; ,
+                d->Vc[VX2][k][j][i] *= av; ,
+                d->Vc[VX3][k][j][i] *= av; )
         }
     }
   }
