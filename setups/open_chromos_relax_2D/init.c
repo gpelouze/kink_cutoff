@@ -361,7 +361,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   }
 
   av_min = g_inputParam[VRW_AMIN];
-  if (side == X2_END){
+  if (side == 0){
     TOT_LOOP(k, j, i) {
       if (x2[j] < g_inputParam[VRW_XMAX]) {
         av = av_min + (1. - av_min) / g_inputParam[VRW_XMAX] * x2[j];
