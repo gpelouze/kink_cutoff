@@ -91,7 +91,7 @@ def get_logfile(setup_config):
     return os.path.join(setup_config['pluto_ini']['log_dir'], 'pluto.log')
 
 
-def apply_setup(setup_config, no_clean=False):
+def apply_setup(setup_config, no_clean=False, no_make=False):
     interpolate_pluto_ini(setup_config['pluto_ini'])
     update_definitions(setup_config['definitions'])
     make_dirs(setup_config['pluto_ini']['output_dir'],
@@ -103,7 +103,8 @@ def apply_setup(setup_config, no_clean=False):
          '--auto-update',
          ],
         check=True)
-    subprocess.run(['make'], check=True)
+    if not no_make:
+        subprocess.run(['make'], check=True)
     if not no_clean:
         subprocess.run(['make', 'clean'], check=True)
 
@@ -118,6 +119,8 @@ if __name__ == '__main__':
     p.add_argument('--last-step', default=None,
                    help=("last step after which to stop "
                          "(apply_hs_equil, run_hs_equil, or apply_solve)"))
+    p.add_argument('--no-make-solve', action='store_true',
+                   help="don't run 'make' after applying the 'solve' setup")
     args = p.parse_args()
 
     last_steps = (None, 'apply_hs_equil', 'run_hs_equil', 'apply_solve')
@@ -140,6 +143,10 @@ if __name__ == '__main__':
     if args.last_step == 'run_hs_equil':
         sys.exit(0)
 
-    apply_setup(config['solve'], no_clean=args.no_clean)
+    apply_setup(
+        config['solve'],
+        no_clean=args.no_clean,
+        no_make=args.no_make_solve,
+        )
     if args.last_step == 'apply_solve':
         sys.exit(0)
