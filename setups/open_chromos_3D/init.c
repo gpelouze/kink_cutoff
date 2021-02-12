@@ -678,7 +678,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 
   if (side == X2_END){
     TOT_LOOP(k, j, i) {
-      if (x2[j] < 10.) {
+      if (x3[j] < 10.) {
         EXPAND( d->Vc[VX1][k][j][i] *= 0.9; ,
                 d->Vc[VX2][k][j][i] *= 0.9; ,
                 d->Vc[VX3][k][j][i] *= 0.9; )
