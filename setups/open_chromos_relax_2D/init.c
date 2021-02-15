@@ -318,7 +318,6 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   int   i, j, k, nv;
   double  *x1, *x2, *x3;
   double Temp, strat;
-  double av, av_min;
 
   double radius = g_inputParam[STEP_R];
 
@@ -326,6 +325,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   x2 = grid->x[JDIR];
   x3 = grid->x[KDIR];
 
+  /* Lower boundary */
   if (side == X2_END){
     if (box->vpos == CENTER) {
       BOX_LOOP(box,k,j,i){
@@ -360,15 +360,81 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
     }
   }
 
-  av_min = g_inputParam[VRW_AMIN];
+  /* Velocity rewrite in the entire domain */
   if (side == 0){
+
+    // (beg) user-defined parameters
+    // TODO: move to pluto.ini
+    const double vrv_t_ramp = 100.;
+    const double vrv_t_prs = 300.;
+    const double vrv_t_wave = 300.;
+    const double vrv_t_restore = 300.;
+    const double vrv_av_relax = .9;
+    const double vrv_av_layer_min = 0.;
+    const double vrv_x_layer_max = 50.;
+    // (end) user-defined parameters
+
+    const double t1 = vrv_t_prs;
+    const double t2 = vrv_t_prs + vrv_t_ramp;
+    const double t3 = vrv_t_prs + vrv_t_ramp + vrv_t_wave;
+    const double t4 = vrv_t_prs + vrv_t_ramp + vrv_t_wave + vrv_t_ramp;
+    const double t5 = vrv_t_prs + vrv_t_ramp + vrv_t_wave + vrv_t_ramp + vrv_t_restore;
+    const double t6 = vrv_t_prs + vrv_t_ramp + vrv_t_wave + vrv_t_ramp + vrv_t_restore + vrv_t_ramp;
+
     TOT_LOOP(k, j, i) {
-      if (x2[j] < g_inputParam[VRW_XMAX]) {
-        av = av_min + (1. - av_min) / g_inputParam[VRW_XMAX] * x2[j];
-        EXPAND( d->Vc[VX1][k][j][i] *= av; ,
-                d->Vc[VX2][k][j][i] *= av; ,
-                d->Vc[VX3][k][j][i] *= av; )
-        }
+
+      // av full domain (time dependence only)
+      double av_relax;
+      if (g_time < t1) {
+        av_relax = 1.;
+      }
+      else if (g_time < t2) {
+        av_relax = 1. - (g_time - t1) * (1. - vrv_av_relax) / vrv_t_ramp;
+      }
+      else if (g_time < t3) {
+        av_relax = vrv_av_relax;
+      }
+      else if (g_time < t4) {
+        av_relax = vrv_av_relax + (g_time - t3) * (1. - vrv_av_relax) / vrv_t_ramp;
+      }
+      else if (g_time < t5) {
+        av_relax = 1.;
+      }
+      else if (g_time < t6) {
+        av_relax = 1. - (g_time - t5) / vrv_t_ramp;
+      }
+      else {
+        av_relax = 0.;
+      }
+
+      // av boundary layer (time dependence)
+      double av_layer;
+      if (g_time < t5) {
+        av_layer = 0.;
+      }
+      else if (g_time < t6) {
+        av_layer = (g_time - t5) / vrv_t_ramp;
+      }
+      else {
+        av_layer = 1.;
+      }
+
+      // av boundary layer (x2 dependence)
+      double bv_layer;
+      if (x2[j] < vrv_x_layer_max) {
+        bv_layer = vrv_av_layer_min + (1. - vrv_av_layer_min) / vrv_x_layer_max* x2[j];
+      }
+      else {
+        bv_layer = 1.;
+      }
+
+      double av;
+      av = av_relax + av_layer * bv_layer;
+
+      EXPAND( d->Vc[VX1][k][j][i] *= av; ,
+              d->Vc[VX2][k][j][i] *= av; ,
+              d->Vc[VX3][k][j][i] *= av; )
+
     }
   }
 
