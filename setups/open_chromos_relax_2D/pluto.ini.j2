@@ -41,7 +41,7 @@ X3-end        outflow
 
 output_dir {{ output_dir }}
 log_dir    {{ log_dir }}
-uservar    3 T divB nu1
+uservar    3 T divB
 dbl        2.        -1   {{ file_type }}
 flt       -1.0  -1   {{ file_type }}
 vtk       -1.0       -1   {{ file_type }}
@@ -70,8 +70,5 @@ STEP_b                         5.
 STEP_rT                        0.3333333333333333
 STEP_rprs                      3.
 Bz0                            42. ; G
-Re                             1.e-1
-Re_end                         1.e5
-t_Re_ramp                      300
 VRW_XMAX                       50. ; L0 (1 Mm)
 VRW_AMIN                       0.

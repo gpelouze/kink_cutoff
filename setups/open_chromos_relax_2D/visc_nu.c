@@ -20,12 +20,6 @@ void Visc_nu(double *v, double x1, double x2, double x3,
 {
   double logRe;
   double tstop = RuntimeGet()->tstop;
-  *nu1 = 1e8*1e7*UNIT_DENSITY/g_inputParam[Re]; // vscale*lscale*rhoscale/Re
-  if (g_time > g_inputParam[t_Re_ramp]) {
-    logRe = log(g_inputParam[Re])
-      + log(g_inputParam[Re_end] / g_inputParam[Re])
-      * (g_time - g_inputParam[t_Re_ramp]) / (tstop - g_inputParam[t_Re_ramp]);
-    *nu1 = 1e8*1e7*UNIT_DENSITY/exp(logRe);
-  }
+  *nu1 = 0.0;
   *nu2 = 0.0;
 }

@@ -9,7 +9,7 @@
 #define  TIME_STEPPING                  CHARACTERISTIC_TRACING
 #define  DIMENSIONAL_SPLITTING          NO
 #define  NTRACER                        0
-#define  USER_DEF_PARAMETERS            15
+#define  USER_DEF_PARAMETERS            12
 
 /* -- physics dependent declarations -- */
 
@@ -21,7 +21,7 @@
 #define  RESISTIVITY                    NO
 #define  HALL_MHD                       NO
 #define  THERMAL_CONDUCTION             SUPER_TIME_STEPPING
-#define  VISCOSITY                      SUPER_TIME_STEPPING
+#define  VISCOSITY                      NO
 #define  ROTATING_FRAME                 NO
 
 /* -- user-defined parameters (labels) -- */
@@ -36,11 +36,8 @@
 #define  STEP_rT                        7
 #define  STEP_rprs                      8
 #define  Bz0                            9
-#define  Re                             10
-#define  Re_end                         11
-#define  t_Re_ramp                      12
-#define  VRW_XMAX                       13
-#define  VRW_AMIN                       14
+#define  VRW_XMAX                       10
+#define  VRW_AMIN                       11
 
 /* [Beg] user-defined constants (do not change this line) */
 
