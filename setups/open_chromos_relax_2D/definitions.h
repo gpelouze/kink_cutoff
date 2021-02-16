@@ -9,7 +9,7 @@
 #define  TIME_STEPPING                  CHARACTERISTIC_TRACING
 #define  DIMENSIONAL_SPLITTING          NO
 #define  NTRACER                        0
-#define  USER_DEF_PARAMETERS            10
+#define  USER_DEF_PARAMETERS            19
 
 /* -- physics dependent declarations -- */
 
@@ -36,6 +36,15 @@
 #define  STEP_rT                        7
 #define  STEP_rprs                      8
 #define  Bz0                            9
+#define  VRW_DT1                        10
+#define  VRW_DT2                        11
+#define  VRW_DT3                        12
+#define  VRW_DT4                        13
+#define  VRW_DT5                        14
+#define  VRW_DT6                        15
+#define  VRW_AV_FULL_DOMAIN             16
+#define  VRW_AV_MIN_BOUNDARY_LAYER      17
+#define  VRW_X_MAX_BOUNDARY_LAYER       18
 
 /* [Beg] user-defined constants (do not change this line) */
 
