@@ -306,62 +306,64 @@ double VelocityRewriteCoeff(double x_loop)
 {
   // (beg) user-defined parameters
   // TODO: move to pluto.ini
-  const double vrv_t_ramp = 100.;
-  const double vrv_t_prs = 300.;
-  const double vrv_t_wave = 300.;
-  const double vrv_t_restore = 300.;
-  const double vrv_av_relax = .999999;
-  const double vrv_av_layer_min = 0.;
-  const double vrv_x_layer_max = 50.;
+  const double vrv_dt1 = 300.;  // hydrostatic equilibrium
+  const double vrv_dt2 = 100.;
+  const double vrv_dt3 = 300.;  // wave damping
+  const double vrv_dt4 = 100.;
+  const double vrv_dt5 = 300.;  // relaxation of damping
+  const double vrv_dt6 = 100.;
+  const double vrv_av_full_domain = .999999;
+  const double vrv_av_min_boundary_layer = 0.;
+  const double vrv_x_max_boundary_layer = 50.;
   // (end) user-defined parameters
 
-  const double t1 = vrv_t_prs;
-  const double t2 = vrv_t_prs + vrv_t_ramp;
-  const double t3 = vrv_t_prs + vrv_t_ramp + vrv_t_wave;
-  const double t4 = vrv_t_prs + vrv_t_ramp + vrv_t_wave + vrv_t_ramp;
-  const double t5 = vrv_t_prs + vrv_t_ramp + vrv_t_wave + vrv_t_ramp + vrv_t_restore;
-  const double t6 = vrv_t_prs + vrv_t_ramp + vrv_t_wave + vrv_t_ramp + vrv_t_restore + vrv_t_ramp;
+  const double t1 = vrv_dt1;
+  const double t2 = t1 + vrv_dt2;
+  const double t3 = t2 + vrv_dt3;
+  const double t4 = t3 + vrv_dt4;
+  const double t5 = t4 + vrv_dt5;
+  const double t6 = t5 + vrv_dt6;
 
   // av full domain (time dependence only)
   double av_relax;
-  if (g_time < t1) {
+  if (g_time < t1) {  // dt1
     av_relax = 1.;
   }
-  else if (g_time < t2) {
-    av_relax = 1. - (g_time - t1) * (1. - vrv_av_relax) / vrv_t_ramp;
+  else if (g_time < t2) {  // dt2
+    av_relax = 1. - (g_time - t1) * (1. - vrv_av_full_domain) / vrv_dt2;
   }
-  else if (g_time < t3) {
-    av_relax = vrv_av_relax;
+  else if (g_time < t3) {  // dt3
+    av_relax = vrv_av_full_domain;
   }
-  else if (g_time < t4) {
-    av_relax = vrv_av_relax + (g_time - t3) * (1. - vrv_av_relax) / vrv_t_ramp;
+  else if (g_time < t4) {  // dt4
+    av_relax = vrv_av_full_domain + (g_time - t3) * (1. - vrv_av_full_domain) / vrv_dt4;
   }
-  else if (g_time < t5) {
+  else if (g_time < t5) {  // dt5
     av_relax = 1.;
   }
-  else if (g_time < t6) {
-    av_relax = 1. - (g_time - t5) / vrv_t_ramp;
+  else if (g_time < t6) {  // dt6
+    av_relax = 1. - (g_time - t5) / vrv_dt6;
   }
-  else {
+  else {  // after dt6
     av_relax = 0.;
   }
 
   // av boundary layer (time dependence)
   double av_layer;
-  if (g_time < t5) {
+  if (g_time < t5) {  // dt1 to dt5
     av_layer = 0.;
   }
-  else if (g_time < t6) {
-    av_layer = (g_time - t5) / vrv_t_ramp;
+  else if (g_time < t6) {  // dt6
+    av_layer = (g_time - t5) / vrv_dt6;
   }
-  else {
+  else {  // after dt6
     av_layer = 1.;
   }
 
   // av boundary layer (x2 dependence)
   double bv_layer;
-  if (x_loop < vrv_x_layer_max) {
-    bv_layer = vrv_av_layer_min + (1. - vrv_av_layer_min) / vrv_x_layer_max * x_loop;
+  if (x_loop < vrv_x_max_boundary_layer) {
+    bv_layer = vrv_av_min_boundary_layer + (1. - vrv_av_min_boundary_layer) / vrv_x_max_boundary_layer * x_loop;
   }
   else {
     bv_layer = 1.;
