@@ -139,15 +139,19 @@ void InitDomainSolveHsEquil (Data *d, Grid *grid)
   T_1D = ARRAY_1D(NX2_TOT, double);
   logPrs = ARRAY_3D(NX3_TOT, NX2_TOT, NX1_TOT, double);
 
-  // // Load and interpolate the temperature from dbl file
-  dbl_fid = InputDataOpen("init_t_profile/T.0000.dbl", "init_t_profile/grid.out", "little", 0);
-  // In the input 1D dbl file, the loop is along IDIR, but in this 2D setup,
-  // the loop is along JDIR. Hence, InputDataInterpolate is called with the
-  // x2 of this setup as the x1 of the input dbl file.
+  // Set temperature to T_CH in the chromosphere, and parabolic profile
+  // T_CH and T0_APEX in the corona.
   JTOT_LOOP(j) {
-    T_1D[j] = InputDataInterpolate(dbl_fid, x2[j], 0., 0.);
+    if (x2[j] > g_inputParam[HALF_LOOP_L] - g_inputParam[DELTA_CH]) {
+      T_1D[j] = 0.;
+    }
+    else {
+      T_1D[j] = pow(1. - pow(x2[j] / (g_inputParam[HALF_LOOP_L] - g_inputParam[DELTA_CH]), 2), 0.3);
+    }
+    if (T_1D[j] < 0.) {
+      T_1D[j] = 0.;
+    }
   }
-  InputDataClose(dbl_fid);
 
   // Initialize T over full domain such that it is constant in the chromosphere
   // and stepped in the corona

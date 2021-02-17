@@ -9,7 +9,7 @@
 #define  TIME_STEPPING                  CHARACTERISTIC_TRACING
 #define  DIMENSIONAL_SPLITTING          NO
 #define  NTRACER                        0
-#define  USER_DEF_PARAMETERS            19
+#define  USER_DEF_PARAMETERS            20
 
 /* -- physics dependent declarations -- */
 
@@ -27,24 +27,25 @@
 /* -- user-defined parameters (labels) -- */
 
 #define  HALF_LOOP_L                    0
-#define  T_CH                           1
-#define  T0_APEX                        2
-#define  NE_CH                          3
-#define  TC_L09                         4
-#define  STEP_R                         5
-#define  STEP_b                         6
-#define  STEP_rT                        7
-#define  STEP_rprs                      8
-#define  Bz0                            9
-#define  VRW_DT1                        10
-#define  VRW_DT2                        11
-#define  VRW_DT3                        12
-#define  VRW_DT4                        13
-#define  VRW_DT5                        14
-#define  VRW_DT6                        15
-#define  VRW_AV_FULL_DOMAIN             16
-#define  VRW_AV_MIN_BOUNDARY_LAYER      17
-#define  VRW_X_MAX_BOUNDARY_LAYER       18
+#define  DELTA_CH                       1
+#define  T_CH                           2
+#define  T0_APEX                        3
+#define  NE_CH                          4
+#define  TC_L09                         5
+#define  STEP_R                         6
+#define  STEP_b                         7
+#define  STEP_rT                        8
+#define  STEP_rprs                      9
+#define  Bz0                            10
+#define  VRW_DT1                        11
+#define  VRW_DT2                        12
+#define  VRW_DT3                        13
+#define  VRW_DT4                        14
+#define  VRW_DT5                        15
+#define  VRW_DT6                        16
+#define  VRW_AV_FULL_DOMAIN             17
+#define  VRW_AV_MIN_BOUNDARY_LAYER      18
+#define  VRW_X_MAX_BOUNDARY_LAYER       19
 
 /* [Beg] user-defined constants (do not change this line) */
 
