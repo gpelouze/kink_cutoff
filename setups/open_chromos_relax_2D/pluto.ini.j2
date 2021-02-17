@@ -9,8 +9,8 @@ X3-grid 1 0.0   1 u 1.0
 [Chombo Refinement]
 
 Levels           4
-Ref_ratio        2 2 2 2 2 
-Regrid_interval  2 2 2 2 
+Ref_ratio        2 2 2 2 2
+Regrid_interval  2 2 2 2
 Refine_thresh    0.3
 Tag_buffer_size  3
 Block_factor     8
@@ -21,7 +21,7 @@ Fill_ratio       0.75
 
 CFL              0.4
 CFL_max_var      1.1
-tstop            1200
+tstop            6000
 first_dt         1.e-4
 
 [Solver]
@@ -42,13 +42,13 @@ X3-end        outflow
 output_dir {{ output_dir }}
 log_dir    {{ log_dir }}
 uservar    3 T divB av
-dbl        2.        -1   {{ file_type }}
+dbl        8.        -1   {{ file_type }}
 flt       -1.0  -1   {{ file_type }}
 vtk       -1.0       -1   {{ file_type }}
 dbl.h5    -1.0  -1
 flt.h5    -1.0  -1
-tab       -1.0  -1   
-ppm       -1.0  -1   
+tab       -1.0  -1
+ppm       -1.0  -1
 png       -1.0  -1
 log        1
 analysis  -1.0  -1
@@ -56,7 +56,7 @@ analysis  -1.0  -1
 [Chombo HDF5 output]
 
 Checkpoint_interval  -1.0  0
-Plot_interval         1.0  0 
+Plot_interval         1.0  0
 
 [Parameters]
 
@@ -72,9 +72,9 @@ STEP_rprs                      3.
 Bz0                            42. ; G
 VRW_DT1                        000. ; t0 // hydrostatic equilibrium
 VRW_DT2                        000. ; t0 // ramp
-VRW_DT3                        3000. ; t0 // wave damping
-VRW_DT4                        2000. ; t0 // ramp
-VRW_DT5                        1000. ; t0 // relaxation of damping
+VRW_DT3                        6001. ; t0 // wave damping
+VRW_DT4                        0000. ; t0 // ramp
+VRW_DT5                        0000. ; t0 // relaxation of damping
 VRW_DT6                        000. ; t0 // ramp
 VRW_AV_FULL_DOMAIN             .9999
 VRW_AV_MIN_BOUNDARY_LAYER      .5
