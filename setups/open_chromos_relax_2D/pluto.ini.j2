@@ -70,12 +70,12 @@ STEP_b                         5.
 STEP_rT                        0.3333333333333333
 STEP_rprs                      3.
 Bz0                            42. ; G
-vrw_dt1                        300. ; t0 // hydrostatic equilibrium
-vrw_dt2                        100. ; t0 // ramp
-vrw_dt3                        300. ; t0 // wave damping
-vrw_dt4                        100. ; t0 // ramp
-vrw_dt5                        300. ; t0 // relaxation of damping
-vrw_dt6                        100. ; t0 // ramp
-vrw_av_full_domain             .999999
-vrw_av_min_boundary_layer      0.
-vrw_x_max_boundary_layer       50.
+VRW_DT1                        000. ; t0 // hydrostatic equilibrium
+VRW_DT2                        000. ; t0 // ramp
+VRW_DT3                        3000. ; t0 // wave damping
+VRW_DT4                        2000. ; t0 // ramp
+VRW_DT5                        1000. ; t0 // relaxation of damping
+VRW_DT6                        000. ; t0 // ramp
+VRW_AV_FULL_DOMAIN             .9999
+VRW_AV_MIN_BOUNDARY_LAYER      .5
+VRW_X_MAX_BOUNDARY_LAYER       50.
