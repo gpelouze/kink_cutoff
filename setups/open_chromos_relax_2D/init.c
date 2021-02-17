@@ -18,9 +18,6 @@
 #define input_Bz0  (g_inputParam[Bz0]/sqrt(4*CONST_PI*UNIT_DENSITY)/UNIT_VELOCITY)
 #define RHO_CH  (g_inputParam[NE_CH] * CONST_amu / UNIT_DENSITY)
 
-#define pulseAmp  6e5/UNIT_VELOCITY
-#define period  24.71
-
 #define IDOM_LOOP_REV(i)  for ((i) = IEND; (i) >= IBEG; (i)--)
 #define JDOM_LOOP_REV(j)  for ((j) = JEND; (j) >= JBEG; (j)--)
 #define KDOM_LOOP_REV(k)  for ((k) = KEND; (k) >= KBEG; (k)--)
