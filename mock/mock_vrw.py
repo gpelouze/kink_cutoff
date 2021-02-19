@@ -18,75 +18,79 @@ if __name__ == '__main__':
     x = np.linspace(0, L, Nx)
 
     # pluto userdef parameters
-    vrv_t_ramp = 100.
-    vrv_t_prs = 300.
-    vrv_t_wave = 300.
-    vrv_t_restore = 300.
-    vrv_av_relax = .9
-    vrv_av_layer_min = .0
-    vrv_x_layer_max = 50.
+    dt1 = 300.
+    dt2 = 100.
+    dt3 = 300.
+    dt4 = 100.
+    dt5 = 300
+    dt6 = 100
+    vrw_av_fulldom_min = .9
+    vrw_av_layer_min = .5
+    vrw_x_max_layer = 50.
 
     # mock
     av = np.full((Nt, Nx), np.nan)
-    av_relax = av.copy()
+    av_fulldom = av.copy()
     av_layer = av.copy()
     bv_layer = av.copy()
 
-    t0 = 0.
-    t1 = t0 + vrv_t_prs
-    t2 = t1 + vrv_t_ramp
-    t3 = t2 + vrv_t_wave
-    t4 = t3 + vrv_t_ramp
-    t5 = t4 + vrv_t_restore
-    t6 = t5 + vrv_t_ramp
+    t1 = dt1
+    t2 = t1 + dt2
+    t3 = t2 + dt3
+    t4 = t3 + dt4
+    t5 = t4 + dt5
+    t6 = t5 + dt6
+    av_fulldom_min = vrw_av_fulldom_min
+    av_layer_min = vrw_av_layer_min
+    x_max_layer = vrw_x_max_layer
 
     for it, g_time in enumerate(all_time):
 
         for ix, _ in enumerate(x):
 
-            # beta_layer
-            if x[ix] < vrv_x_layer_max:
-                bv_layer[it, ix] = (
-                    vrv_av_layer_min +
-                    (1 - vrv_av_layer_min) / vrv_x_layer_max * x[ix]
-                    )
-            else:
-                bv_layer[it, ix] = 1.
-
-            # alpha_relax
+            # alpha_fulldom
             if g_time < t1:
-                av_relax[it, ix] = 1.
+                av_fulldom[it, ix] = 1.
             elif g_time < t2:
-                av_relax[it, ix] = 1. - (g_time - t1) * (1. - vrv_av_relax) / vrv_t_ramp
+                av_fulldom[it, ix] = 1. - (g_time - t1) * (1. - av_fulldom_min) / dt2
             elif g_time < t3:
-                av_relax[it, ix] = vrv_av_relax
+                av_fulldom[it, ix] = av_fulldom_min
             elif g_time < t4:
-                av_relax[it, ix] = vrv_av_relax + (g_time - t3) * (1. - vrv_av_relax) / vrv_t_ramp
+                av_fulldom[it, ix] = av_fulldom_min + (g_time - t3) * (1. - av_fulldom_min) / dt4
             elif g_time < t5:
-                av_relax[it, ix] = 1.
+                av_fulldom[it, ix] = 1.
             elif g_time < t6:
-                av_relax[it, ix] = 1. - (g_time - t5) / vrv_t_ramp
+                av_fulldom[it, ix] = 1. - (g_time - t5) / dt6
             else:
-                av_relax[it, ix] = 0.
+                av_fulldom[it, ix] = 0.
 
             # alpha_layer
             if g_time < t5:
                 av_layer[it, ix] = 0.
             elif g_time < t6:
-                av_layer[it, ix] = (g_time - t5) / vrv_t_ramp
+                av_layer[it, ix] = (g_time - t5) / dt6
             else:
                 av_layer[it, ix] = 1.
 
-    av = av_relax + av_layer*bv_layer
+            # beta_layer
+            if x[ix] < x_max_layer:
+                bv_layer[it, ix] = (
+                    av_layer_min +
+                    (1 - av_layer_min) / x_max_layer * x[ix]
+                    )
+            else:
+                bv_layer[it, ix] = 1.
+
+    av = av_fulldom + av_layer*bv_layer
     assert np.all(av <= 1.)
 
     # plot result
-    av_relax_plot = papy.num.almost_identical(av_relax, 1e-10, axis=1)
+    av_fulldom_plot = papy.num.almost_identical(av_fulldom, 1e-10, axis=1)
     av_layer_plot = papy.num.almost_identical(av_layer, 1e-10, axis=1)
     plt.clf()
     plt.plot(
         all_time,
-        av_relax_plot,
+        av_fulldom_plot,
         'r-',
         label='$\\alpha_\\mathrm{relax}$',
         )
@@ -96,7 +100,7 @@ if __name__ == '__main__':
         'g--',
         label='$\\alpha_\\mathrm{layer}$',
         )
-    for tmark in [t0, t1, t2, t3, t4, t5, t6]:
+    for tmark in [t1, t2, t3, t4, t5, t6]:
         plt.axvline(tmark, alpha=.2)
     plt.legend()
     plt.xlabel('Time [$t_0$]')
@@ -111,7 +115,7 @@ if __name__ == '__main__':
         'g--',
         label='$\\beta_\\mathrm{layer}$',
         )
-    plt.axvline(vrv_x_layer_max, alpha=.2)
+    plt.axvline(vrw_x_max_layer, alpha=.2)
     plt.legend()
     plt.xlabel('x [Mm]')
     plt.ylabel('$\\beta$')
@@ -129,4 +133,4 @@ if __name__ == '__main__':
     plt.colorbar(m, label='$\\alpha_v$')
     plt.xlabel('Time [$t_0$]')
     plt.ylabel('x [Mm]')
-    plt.savefig('data/mock_vrv_av.pdf')
+    plt.savefig('data/mock_vrw_av.pdf')
