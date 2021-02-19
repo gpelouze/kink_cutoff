@@ -61,10 +61,10 @@ if __name__ == '__main__':
             elif g_time < t5:
                 av_fulldom[it, ix] = 1.
             elif g_time < t6:
-                if dt4 > 0:
-                    av_fulldom[it, ix] = 1. - (g_time - t5) / dt6
-                else:
+                if (dt4 == 0) and (dt5 == 0):
                     av_fulldom[it, ix] = av_fulldom_min - (g_time - t5) * av_fulldom_min / dt6
+                else:
+                    av_fulldom[it, ix] = 1. - (g_time - t5) / dt6
             else:
                 av_fulldom[it, ix] = 0.
 
