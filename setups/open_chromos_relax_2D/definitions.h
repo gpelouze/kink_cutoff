@@ -42,9 +42,9 @@
 #define  VRW_DT4                        13
 #define  VRW_DT5                        14
 #define  VRW_DT6                        15
-#define  VRW_AV_FULL_DOMAIN             16
-#define  VRW_AV_MIN_BOUNDARY_LAYER      17
-#define  VRW_X_MAX_BOUNDARY_LAYER       18
+#define  VRW_AV_FULLDOM_MIN             16
+#define  VRW_AV_LAYER_MIN               17
+#define  VRW_X_MAX_LAYER                18
 
 /* [Beg] user-defined constants (do not change this line) */
 

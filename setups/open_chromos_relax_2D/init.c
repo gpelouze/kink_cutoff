@@ -308,9 +308,9 @@ double VelocityRewriteCoeff(double x_loop)
   const double dt4 = g_inputParam[VRW_DT4];
   const double dt5 = g_inputParam[VRW_DT5];
   const double dt6 = g_inputParam[VRW_DT6];
-  const double av_full_domain = g_inputParam[VRW_AV_FULL_DOMAIN];
-  const double av_min_boundary_layer = g_inputParam[VRW_AV_MIN_BOUNDARY_LAYER];
-  const double x_max_boundary_layer = g_inputParam[VRW_X_MAX_BOUNDARY_LAYER];
+  const double av_fulldom_min = g_inputParam[VRW_AV_FULLDOM_MIN];
+  const double av_layer_min = g_inputParam[VRW_AV_LAYER_MIN];
+  const double x_max_layer = g_inputParam[VRW_X_MAX_LAYER];
 
   const double t1 = dt1;
   const double t2 = t1 + dt2;
@@ -320,27 +320,27 @@ double VelocityRewriteCoeff(double x_loop)
   const double t6 = t5 + dt6;
 
   // av full domain (time dependence only)
-  double av_relax;
+  double av_fulldom;
   if (g_time < t1) {  // dt1
-    av_relax = 1.;
+    av_fulldom = 1.;
   }
   else if (g_time < t2) {  // dt2
-    av_relax = 1. - (g_time - t1) * (1. - av_full_domain) / dt2;
+    av_fulldom = 1. - (g_time - t1) * (1. - av_fulldom_min) / dt2;
   }
   else if (g_time < t3) {  // dt3
-    av_relax = av_full_domain;
+    av_fulldom = av_fulldom_min;
   }
   else if (g_time < t4) {  // dt4
-    av_relax = av_full_domain + (g_time - t3) * (1. - av_full_domain) / dt4;
+    av_fulldom = av_fulldom_min + (g_time - t3) * (1. - av_fulldom_min) / dt4;
   }
   else if (g_time < t5) {  // dt5
-    av_relax = 1.;
+    av_fulldom = 1.;
   }
   else if (g_time < t6) {  // dt6
-    av_relax = 1. - (g_time - t5) / dt6;
+    av_fulldom = 1. - (g_time - t5) / dt6;
   }
   else {  // after dt6
-    av_relax = 0.;
+    av_fulldom = 0.;
   }
 
   // av boundary layer (time dependence)
@@ -355,16 +355,16 @@ double VelocityRewriteCoeff(double x_loop)
     av_layer = 1.;
   }
 
-  // av boundary layer (x2 dependence)
+  // bv boundary layer (x2 dependence)
   double bv_layer;
-  if (x_loop < x_max_boundary_layer) {
-    bv_layer = av_min_boundary_layer + (1. - av_min_boundary_layer) / x_max_boundary_layer * x_loop;
+  if (x_loop < x_max_layer) {
+    bv_layer = av_layer_min + (1. - av_layer_min ) / x_max_layer * x_loop;
   }
   else {
     bv_layer = 1.;
   }
 
-  return av_relax + av_layer * bv_layer;
+  return av_fulldom + av_layer * bv_layer;
 }
 
 /* ********************************************************************* */
