@@ -337,7 +337,12 @@ double VelocityRewriteCoeff(double x_loop)
     av_fulldom = 1.;
   }
   else if (g_time < t6) {  // dt6
-    av_fulldom = 1. - (g_time - t5) / dt6;
+    if (dt4 > 0.) {
+      av_fulldom = 1. - (g_time - t5) / dt6;
+    }
+    else {
+      av_fulldom = av_fulldom_min - (g_time - t5) * av_fulldom_min / dt6;
+    }
   }
   else {  // after dt6
     av_fulldom = 0.;
