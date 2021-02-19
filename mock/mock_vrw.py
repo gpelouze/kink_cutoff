@@ -106,11 +106,11 @@ if __name__ == '__main__':
         color='#ddaa33',
         label='$\\alpha_{v,f}$',
         )
-    for tmark in [t1, t2, t3, t4, t5, t6]:
-        plt.plot([tmark, tmark], [0, 1], color='k', alpha=.2)
     for i, (dt, t) in enumerate(zip([dt1, dt2, dt3, dt4, dt5, dt6], [0, t1, t2, t3, t4, t5])):
-        print(i, dt, t)
-        plt.text(t+dt/2, -0.075, f'$\\mathrm{{d}}t_{i+1}$', ha='center', va='top', color='gray')
+        if dt > 0:
+            if t > 0:
+                plt.plot([t, t], [0, 1], color='k', alpha=.2)
+            plt.text(t+dt/2, -0.075, f'$\\mathrm{{d}}t_{i+1}$', ha='center', va='top', color='gray')
     plt.legend(frameon=False)
     plt.xlabel('Time')
     plt.ylabel('$\\alpha_v$')
