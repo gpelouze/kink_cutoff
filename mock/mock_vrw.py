@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import etframes
 import matplotlib.pyplot as plt
 import numpy as np
 import papy
@@ -12,19 +13,19 @@ if __name__ == '__main__':
     Nx = 200
 
     # pluto parameters
-    tstop = 1500.
+    tstop = 1400.
     L = 100
     all_time = np.linspace(0, tstop, Nt)
     x = np.linspace(0, L, Nx)
 
     # pluto userdef parameters
-    dt1 = 300.
-    dt2 = 100.
-    dt3 = 300.
-    dt4 = 100.
-    dt5 = 300
-    dt6 = 100
-    vrw_av_fulldom_min = .9
+    dt1 = 200.
+    dt2 = 200.
+    dt3 = 200.
+    dt4 = 200.
+    dt5 = 200
+    dt6 = 200
+    vrw_av_fulldom_min = .8
     vrw_av_layer_min = .5
     vrw_x_max_layer = 50.
 
@@ -90,21 +91,35 @@ if __name__ == '__main__':
     plt.clf()
     plt.plot(
         all_time,
-        av_fulldom_plot,
-        'r-',
-        label='$\\alpha_\\mathrm{relax}$',
+        av_layer_plot,
+        '--',
+        color='#008B72',
+        label='$\\alpha_{v,l}$',
         )
     plt.plot(
         all_time,
-        av_layer_plot,
-        'g--',
-        label='$\\alpha_\\mathrm{layer}$',
+        av_fulldom_plot,
+        '-',
+        color='#ddaa33',
+        label='$\\alpha_{v,f}$',
         )
     for tmark in [t1, t2, t3, t4, t5, t6]:
-        plt.axvline(tmark, alpha=.2)
-    plt.legend()
-    plt.xlabel('Time [$t_0$]')
-    plt.ylabel('$\\alpha$')
+        plt.plot([tmark, tmark], [0, 1], color='k', alpha=.2)
+    for i, (dt, t) in enumerate(zip([dt1, dt2, dt3, dt4, dt5, dt6], [0, t1, t2, t3, t4, t5])):
+        print(i, dt, t)
+        plt.text(t+dt/2, -0.075, f'$\\mathrm{{d}}t_{i+1}$', ha='center', va='top', color='gray')
+    plt.legend(frameon=False)
+    plt.xlabel('Time')
+    plt.ylabel('$\\alpha_v$')
+    etframes.add_range_frame()
+    plt.yticks(
+        ticks=(0, av_fulldom_min, 1),
+        labels=('0', '$\\alpha_{v,f,\\mathrm{min}}$', 1),
+        )
+    plt.xticks(
+        ticks=(all_time.min(), t1, t2, t3, t4, t5, t6, all_time.max()),
+        labels=('0', '$t_1$', '$t_2$', '$t_3$', '$t_4$', '$t_5$', '$t_6$', '$t_\\mathrm{stop}$'),
+        )
     plt.savefig('data/mock_vrw_alpha.pdf')
 
     bv_layer_plot = papy.num.almost_identical(bv_layer, 1e-10, axis=0)
@@ -112,13 +127,22 @@ if __name__ == '__main__':
     plt.plot(
         x,
         bv_layer_plot,
-        'g--',
-        label='$\\beta_\\mathrm{layer}$',
+        '--',
+        color='#008B72',
+        label='$\\beta_{v,l}$',
         )
-    plt.axvline(vrw_x_max_layer, alpha=.2)
-    plt.legend()
-    plt.xlabel('x [Mm]')
-    plt.ylabel('$\\beta$')
+    plt.plot([vrw_x_max_layer, vrw_x_max_layer], [av_layer_min, 1], color='k', alpha=.2)
+    plt.xlabel('Position along the loop')
+    plt.ylabel('$\\beta_v$')
+    etframes.add_range_frame()
+    plt.yticks(
+        ticks=(av_layer_min, 1),
+        labels=('$\\alpha_{v,l,\\mathrm{min}}$', 1),
+        )
+    plt.xticks(
+        ticks=(x.min(), x_max_layer, x.max()),
+        labels=('0 (apex)', '$x_{\\mathrm{max},l}$', 'L/2'),
+        )
     plt.savefig('data/mock_vrw_beta.pdf')
 
     plt.clf()
@@ -127,10 +151,19 @@ if __name__ == '__main__':
         av.T,
         coordinates=[all_time, x],
         aspect=(all_time.ptp() / x.ptp()),
-        vmin=0,
-        vmax=1,
+        cmap='gray',
         )
-    plt.colorbar(m, label='$\\alpha_v$')
-    plt.xlabel('Time [$t_0$]')
-    plt.ylabel('x [Mm]')
+    cb = plt.colorbar(m, label='$\\alpha_v$', pad=0)
+    plt.xlabel('Time')
+    plt.ylabel('Position along the loop')
+    plt.xticks(
+        ticks=(all_time.min(), t1, t2, t3, t4, t5, t6, all_time.max()),
+        labels=('0', '$t_1$', '$t_2$', '$t_3$', '$t_4$', '$t_5$', '$t_6$', '$t_\\mathrm{stop}$'),
+        )
+    plt.yticks(
+        ticks=(x.min(), x_max_layer, x.max()),
+        labels=('0', '$x_{\\mathrm{max},l}$', 'L/2'),
+        )
+    cb.set_ticks((0, av_layer_min, av_fulldom_min, 1))
+    cb.set_ticklabels(('0', '$\\alpha_{v,l,\\mathrm{min}}$', '$\\alpha_{v,f,\\mathrm{min}}$', 1))
     plt.savefig('data/mock_vrw_av.pdf')
