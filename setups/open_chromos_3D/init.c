@@ -596,6 +596,34 @@ void BackgroundField (double x1, double x2, double x3, double *B0)
 #endif
 
 /* ********************************************************************* */
+double VelocityRewriteCoeff(double x_loop)
+/*!
+ *  Determine the velocity rewrite coefficient alpha_v.
+ *
+ * \param [in] x_loop  coordinate along the loop (x2 in 2D setups,
+ *                     and x3 in 3D setups)
+ *
+ * \return the velocity rewrite coefficient \f$ \alpha_v(x_\mathrm{loop} \f$.
+ *
+ *********************************************************************** */
+{
+  // retrieve input parameters
+  const double av_layer_min = g_inputParam[VRW_AV_LAYER_MIN];
+  const double x_max_layer = g_inputParam[VRW_X_MAX_LAYER];
+
+  // bv boundary layer (x3 dependence)
+  double bv_layer;
+  if (x_loop < x_max_layer) {
+    bv_layer = av_layer_min + (1. - av_layer_min ) / x_max_layer * x_loop;
+  }
+  else {
+    bv_layer = 1.;
+  }
+
+  return bv_layer;
+}
+
+/* ********************************************************************* */
 void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid) 
 /*! 
  *  Assign user-defined boundary conditions.
@@ -632,6 +660,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   x2 = grid->x[JDIR];
   x3 = grid->x[KDIR];
 
+  /* Lower boundary */
   if (side == X3_END){
     if (box->vpos == CENTER) {
       BOX_LOOP(box,k,j,i){
@@ -677,15 +706,13 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
     }
   }
 
-  av_min = g_inputParam[VRW_AMIN];
+  /* Velocity rewrite in the entire domain */
   if (side == 0){
     TOT_LOOP(k, j, i) {
-      if (x3[k] < g_inputParam[VRW_XMAX]) {
-        av = av_min + (1. - av_min) / g_inputParam[VRW_XMAX] * x3[k];
-        EXPAND( d->Vc[VX1][k][j][i] *= av; ,
-                d->Vc[VX2][k][j][i] *= av; ,
-                d->Vc[VX3][k][j][i] *= av; )
-        }
+      double av = VelocityRewriteCoeff(x3[k]);
+      EXPAND( d->Vc[VX1][k][j][i] *= av; ,
+              d->Vc[VX2][k][j][i] *= av; ,
+              d->Vc[VX3][k][j][i] *= av; )
     }
   }
 
