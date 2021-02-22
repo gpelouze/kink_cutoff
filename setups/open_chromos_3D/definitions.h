@@ -32,8 +32,8 @@
 #define  STEP_b                         3
 #define  DRIVER_P                       4
 #define  DRIVER_v0                      5
-#define  VRW_XMAX                       6
-#define  VRW_AMIN                       7
+#define  VRW_AV_LAYER_MIN               6
+#define  VRW_X_MAX_LAYER                7
 
 /* [Beg] user-defined constants (do not change this line) */
 
