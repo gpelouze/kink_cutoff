@@ -33,24 +33,12 @@ if __name__ == '__main__':
     all_time = np.linspace(0, args.tstop, args.Nt)
     x = np.linspace(0, args.L, args.Nx)
 
-    # mock
-    av = np.full((args.Nt, args.Nx), np.nan)
-    av_fulldom = av.copy()
-    av_layer = av.copy()
-    bv_layer = av.copy()
-
     dt1 = args.dt1
     dt2 = args.dt2
     dt3 = args.dt3
     dt4 = args.dt4
     dt5 = args.dt5
     dt6 = args.dt6
-    t1 = dt1
-    t2 = t1 + dt2
-    t3 = t2 + dt3
-    t4 = t3 + dt4
-    t5 = t4 + dt5
-    t6 = t5 + dt6
     av_fulldom_min = args.avfmin
     av_layer_min = args.avlmin
     x_max_layer = args.xmaxl
@@ -60,6 +48,20 @@ if __name__ == '__main__':
     if not args.real_scale:
         av_fulldom_min = np.clip(av_fulldom_min, None, 0.9)
         av_layer_min = np.clip(av_layer_min, None, 0.8)
+
+    # mock
+
+    av = np.full((args.Nt, args.Nx), np.nan)
+    av_fulldom = av.copy()
+    av_layer = av.copy()
+    bv_layer = av.copy()
+
+    t1 = dt1
+    t2 = t1 + dt2
+    t3 = t2 + dt3
+    t4 = t3 + dt4
+    t5 = t4 + dt5
+    t6 = t5 + dt6
 
     for it, g_time in enumerate(all_time):
 
@@ -104,6 +106,8 @@ if __name__ == '__main__':
     av = av_fulldom + av_layer*bv_layer
     assert np.all(av <= 1.)
 
+    # plot result
+
     dt = {i+1: v for i, v in enumerate([dt1, dt2, dt3, dt4, dt5, dt6])}
     t = {i+1: v for i, v in enumerate([0, t1, t2, t3, t4, t5, t6])}
     dt_nonzero = {i: dt[i] for i in dt.keys() if dt[i] > 0}
@@ -135,7 +139,6 @@ if __name__ == '__main__':
         del x_ticks[1]
         del x_ticklabels[1]
 
-    # plot result
     av_fulldom_plot = papy.num.almost_identical(av_fulldom, 1e-10, axis=1)
     av_layer_plot = papy.num.almost_identical(av_layer, 1e-10, axis=1)
     plt.clf()
