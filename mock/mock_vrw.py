@@ -48,6 +48,8 @@ if __name__ == '__main__':
     if not args.real_scale:
         av_fulldom_min = np.clip(av_fulldom_min, None, 0.9)
         av_layer_min = np.clip(av_layer_min, None, 0.8)
+    if av_fulldom_min_print < av_layer_min_print:
+        av_fulldom_min, av_layer_min = av_layer_min, av_fulldom_min
 
     # mock
 
