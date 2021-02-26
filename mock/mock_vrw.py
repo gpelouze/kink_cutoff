@@ -97,10 +97,10 @@ if __name__ == '__main__':
     av = av_fulldom + av_layer*bv_layer
     assert np.all(av <= 1.)
 
-    dt = dict(enumerate([dt1, dt2, dt3, dt4, dt5, dt6]))
-    t = dict(enumerate([t1, t2, t3, t4, t5, t6]))
+    dt = {i+1: v for i, v in enumerate([dt1, dt2, dt3, dt4, dt5, dt6])}
+    t = {i+1: v for i, v in enumerate([0, t1, t2, t3, t4, t5, t6])}
     dt_nonzero = {i: dt[i] for i in dt.keys() if dt[i] > 0}
-    t_nonzero = {i: t[i] for i in t.keys() if dt[i] > 0}
+    t_nonzero = {i: t[i+1] for i in dt.keys() if dt[i] > 0}
 
     t_ticks = {}
     if all_time.min() not in t_nonzero.values():
@@ -110,6 +110,8 @@ if __name__ == '__main__':
         t_ticks['end'] = all_time.max()
     if args.plot_symbolic:
         t_ticklabels = {i: f'$t_\\mathrm{{{i}}}$' for i, t in t_ticks.items()}
+        if 0 in t_ticklabels:
+            t_ticklabels[0] = 0
     else:
         t_ticklabels = {i: f'{t:g}' for i, t in t_ticks.items()}
     t_ticks = list(t_ticks.values())
