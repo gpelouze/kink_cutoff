@@ -19,14 +19,15 @@ if __name__ == '__main__':
     p.add_argument('--dt4', type=float, default=0)
     p.add_argument('--dt5', type=float, default=0)
     p.add_argument('--dt6', type=float, default=0)
-    p.add_argument('--vrw-av-fulldom-min', type=float, default=0.9)
-    p.add_argument('--vrw-av-layer-min', type=float, default=0.8)
-    p.add_argument('--vrw-x-max-layer', type=float, default=50.)
+    p.add_argument('--avfmin', type=float, default=0.9)
+    p.add_argument('--avlmin', type=float, default=0.8)
+    p.add_argument('--xmaxl', type=float, default=50.)
     p.add_argument('--L', type=float, default=100)
     # mock parameters
     p.add_argument('--Nt', type=int, default=500)
     p.add_argument('--Nx', type=int, default=200)
     p.add_argument('--plot-symbolic', action='store_true')
+    p.add_argument('--real-scale', action='store_true')
     args = p.parse_args()
 
     all_time = np.linspace(0, args.tstop, args.Nt)
@@ -50,9 +51,15 @@ if __name__ == '__main__':
     t4 = t3 + dt4
     t5 = t4 + dt5
     t6 = t5 + dt6
-    av_fulldom_min = args.vrw_av_fulldom_min
-    av_layer_min = args.vrw_av_layer_min
-    x_max_layer = args.vrw_x_max_layer
+    av_fulldom_min = args.avfmin
+    av_layer_min = args.avlmin
+    x_max_layer = args.xmaxl
+
+    av_fulldom_min_print = av_fulldom_min
+    av_layer_min_print = av_layer_min
+    if not args.real_scale:
+        av_fulldom_min = np.clip(av_fulldom_min, None, 0.9)
+        av_layer_min = np.clip(av_layer_min, None, 0.8)
 
     for it, g_time in enumerate(all_time):
 
@@ -159,7 +166,7 @@ if __name__ == '__main__':
         ticks=(0, av_fulldom_min, 1),
         labels=('0',
                 ('$\\alpha_{v,f,\\mathrm{min}}$' if args.plot_symbolic
-                 else f'{av_fulldom_min:g}'),
+                 else f'{av_fulldom_min_print:g}'),
                 1),
         )
     plt.xticks(ticks=t_ticks, labels=t_ticklabels)
@@ -174,7 +181,7 @@ if __name__ == '__main__':
         color='#008B72',
         label='$\\beta_{v,l}$',
         )
-    plt.plot([args.vrw_x_max_layer, args.vrw_x_max_layer], [av_layer_min, 1], color='k', alpha=.2)
+    plt.plot([x_max_layer, x_max_layer], [av_layer_min, 1], color='k', alpha=.2)
     plt.xlabel('Position along the loop')
     plt.ylabel('$\\beta_v$')
     etframes.add_range_frame()
@@ -182,7 +189,7 @@ if __name__ == '__main__':
         ticks=(av_layer_min, 1),
         labels=(
             ('$\\alpha_{v,l,\\mathrm{min}}$' if args.plot_symbolic
-             else av_layer_min),
+             else av_layer_min_print),
             1,
             ),
         )
@@ -204,7 +211,7 @@ if __name__ == '__main__':
                  ha='center', va='center')
     if 3 in dt_nonzero:
         plt.text(t3-dt3/2, args.L/2,
-                 f'{args.vrw_av_fulldom_min:g}',
+                 f'{av_fulldom_min_print:g}',
                  color='white',
                  ha='center', va='center')
     if 5 in dt_nonzero:
@@ -213,11 +220,11 @@ if __name__ == '__main__':
                  ha='center', va='center')
     if t6 < args.tstop:
         plt.text(t6+(args.tstop-t6)/2,
-                 args.vrw_x_max_layer + (args.L-args.vrw_x_max_layer)/2,
+                 x_max_layer + (args.L-x_max_layer)/2,
                  f'1.0',
                  ha='center', va='center')
         plt.text(t6+(args.tstop-t6)/2, 0,
-                 f'{args.vrw_av_layer_min:g}',
+                 f'{av_layer_min_print:g}',
                  color='white',
                  ha='center', va='bottom')
 
@@ -230,8 +237,8 @@ if __name__ == '__main__':
     cb.set_ticklabels((
         '0',
         ('$\\alpha_{v,l,\\mathrm{min}}$' if args.plot_symbolic
-         else av_layer_min),
+         else av_layer_min_print),
         ('$\\alpha_{v,f,\\mathrm{min}}$' if args.plot_symbolic
-         else av_fulldom_min),
+         else av_fulldom_min_print),
         1))
     plt.savefig('data/mock_vrw_av.pdf')
