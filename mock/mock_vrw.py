@@ -19,9 +19,9 @@ if __name__ == '__main__':
     p.add_argument('--dt4', type=float, default=0)
     p.add_argument('--dt5', type=float, default=0)
     p.add_argument('--dt6', type=float, default=0)
-    p.add_argument('--vrw_av_fulldom_min', type=float, default=0.9)
-    p.add_argument('--vrw_av_layer_min', type=float, default=0.8)
-    p.add_argument('--vrw_x_max_layer', type=float, default=50.)
+    p.add_argument('--vrw-av-fulldom-min', type=float, default=0.9)
+    p.add_argument('--vrw-av-layer-min', type=float, default=0.8)
+    p.add_argument('--vrw-x-max-layer', type=float, default=50.)
     p.add_argument('--L', type=float, default=100)
     # mock parameters
     p.add_argument('--Nt', type=int, default=500)
