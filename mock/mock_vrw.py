@@ -29,6 +29,9 @@ if __name__ == '__main__':
     vrw_av_layer_min = .5
     vrw_x_max_layer = 50.
 
+    # Plot behaviour
+    plot_symbolic = False
+
     # mock
     av = np.full((Nt, Nx), np.nan)
     av_fulldom = av.copy()
@@ -88,6 +91,35 @@ if __name__ == '__main__':
     av = av_fulldom + av_layer*bv_layer
     assert np.all(av <= 1.)
 
+    dt = dict(enumerate([dt1, dt2, dt3, dt4, dt5, dt6]))
+    t = dict(enumerate([t1, t2, t3, t4, t5, t6]))
+    dt_nonzero = {i: dt[i] for i in dt.keys() if dt[i] > 0}
+    t_nonzero = {i: t[i] for i in t.keys() if dt[i] > 0}
+
+    t_ticks = {}
+    if all_time.min() not in t_nonzero.values():
+        t_ticks[0] = all_time.min()
+    t_ticks.update(t_nonzero)
+    if all_time.max() not in t_nonzero.values():
+        t_ticks['end'] = all_time.max()
+    if plot_symbolic:
+        t_ticklabels = {i: f'$t_\\mathrm{{{i}}}$' for i, t in t_ticks.items()}
+    else:
+        t_ticklabels = {i: f'{t:g}' for i, t in t_ticks.items()}
+    t_ticks = list(t_ticks.values())
+    t_ticklabels = list(t_ticklabels.values())
+
+    x_ticks = [0, x_max_layer, L]
+    if plot_symbolic:
+        x_ticklabels = ['0 (apex)', '$x_{\\mathrm{max},l}$', 'L']
+    else:
+        x_ticklabels = [0., float(x_max_layer), float(L)]
+    x_ticks_all = x_ticks.copy()
+    x_ticklabels_all = x_ticklabels.copy()
+    if t5 >= tstop:
+        del x_ticks[1]
+        del x_ticklabels[1]
+
     # plot result
     av_fulldom_plot = papy.num.almost_identical(av_fulldom, 1e-10, axis=1)
     av_layer_plot = papy.num.almost_identical(av_layer, 1e-10, axis=1)
@@ -106,23 +138,23 @@ if __name__ == '__main__':
         color='#ddaa33',
         label='$\\alpha_{v,f}$',
         )
-    for i, (dt, t) in enumerate(zip([dt1, dt2, dt3, dt4, dt5, dt6], [0, t1, t2, t3, t4, t5])):
-        if dt > 0:
-            if t > 0:
-                plt.plot([t, t], [0, 1], color='k', alpha=.2)
-            plt.text(t+dt/2, -0.075, f'$\\mathrm{{d}}t_{i+1}$', ha='center', va='top', color='gray')
+    for i, t in t_nonzero.items():
+        if t > 0:
+            plt.plot([t, t], [0, 1], color='k', alpha=.2)
+        if plot_symbolic:
+            plt.text(t-dt[i]/2, -0.075, f'$\\mathrm{{d}}t_{i}$', ha='center', va='top', color='gray')
     plt.legend(frameon=False)
     plt.xlabel('Time')
     plt.ylabel('$\\alpha_v$')
     etframes.add_range_frame()
     plt.yticks(
         ticks=(0, av_fulldom_min, 1),
-        labels=('0', '$\\alpha_{v,f,\\mathrm{min}}$', 1),
+        labels=('0',
+                ('$\\alpha_{v,f,\\mathrm{min}}$' if plot_symbolic
+                 else f'{av_fulldom_min:g}'),
+                1),
         )
-    plt.xticks(
-        ticks=(all_time.min(), t1, t2, t3, t4, t5, t6, all_time.max()),
-        labels=('0', '$t_1$', '$t_2$', '$t_3$', '$t_4$', '$t_5$', '$t_6$', '$t_\\mathrm{stop}$'),
-        )
+    plt.xticks(ticks=t_ticks, labels=t_ticklabels)
     plt.savefig('data/mock_vrw_alpha.pdf')
 
     bv_layer_plot = papy.num.almost_identical(bv_layer, 1e-10, axis=0)
@@ -140,12 +172,13 @@ if __name__ == '__main__':
     etframes.add_range_frame()
     plt.yticks(
         ticks=(av_layer_min, 1),
-        labels=('$\\alpha_{v,l,\\mathrm{min}}$', 1),
+        labels=(
+            ('$\\alpha_{v,l,\\mathrm{min}}$' if plot_symbolic
+             else av_layer_min),
+            1,
+            ),
         )
-    plt.xticks(
-        ticks=(x.min(), x_max_layer, x.max()),
-        labels=('0 (apex)', '$x_{\\mathrm{max},l}$', 'L/2'),
-        )
+    plt.xticks(ticks=x_ticks_all, labels=x_ticklabels_all)
     plt.savefig('data/mock_vrw_beta.pdf')
 
     plt.clf()
@@ -159,14 +192,14 @@ if __name__ == '__main__':
     cb = plt.colorbar(m, label='$\\alpha_v$', pad=0)
     plt.xlabel('Time')
     plt.ylabel('Position along the loop')
-    plt.xticks(
-        ticks=(all_time.min(), t1, t2, t3, t4, t5, t6, all_time.max()),
-        labels=('0', '$t_1$', '$t_2$', '$t_3$', '$t_4$', '$t_5$', '$t_6$', '$t_\\mathrm{stop}$'),
-        )
-    plt.yticks(
-        ticks=(x.min(), x_max_layer, x.max()),
-        labels=('0', '$x_{\\mathrm{max},l}$', 'L/2'),
-        )
+    plt.xticks(ticks=t_ticks, labels=t_ticklabels)
+    plt.yticks(ticks=x_ticks, labels=x_ticklabels)
     cb.set_ticks((0, av_layer_min, av_fulldom_min, 1))
-    cb.set_ticklabels(('0', '$\\alpha_{v,l,\\mathrm{min}}$', '$\\alpha_{v,f,\\mathrm{min}}$', 1))
+    cb.set_ticklabels((
+        '0',
+        ('$\\alpha_{v,l,\\mathrm{min}}$' if plot_symbolic
+         else av_layer_min),
+        ('$\\alpha_{v,f,\\mathrm{min}}$' if plot_symbolic
+         else av_fulldom_min),
+        1))
     plt.savefig('data/mock_vrw_av.pdf')
