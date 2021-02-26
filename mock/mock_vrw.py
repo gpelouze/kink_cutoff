@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
     av_fulldom_plot = papy.num.almost_identical(av_fulldom, 1e-10, axis=1)
     av_layer_plot = papy.num.almost_identical(av_layer, 1e-10, axis=1)
-    plt.clf()
+    plt.figure(clear=True, constrained_layout=False)
     plt.plot(
         all_time,
         av_layer_plot,
@@ -175,10 +175,11 @@ if __name__ == '__main__':
                 1),
         )
     plt.xticks(ticks=t_ticks, labels=t_ticklabels)
+    plt.tight_layout()
     plt.savefig('data/mock_vrw_alpha.pdf')
 
     bv_layer_plot = papy.num.almost_identical(bv_layer, 1e-10, axis=0)
-    plt.clf()
+    plt.figure(clear=True, constrained_layout=False)
     plt.plot(
         x,
         bv_layer_plot,
@@ -199,9 +200,10 @@ if __name__ == '__main__':
             ),
         )
     plt.xticks(ticks=x_ticks_all, labels=x_ticklabels_all)
+    plt.tight_layout()
     plt.savefig('data/mock_vrw_beta.pdf')
 
-    plt.clf()
+    plt.figure(clear=True, constrained_layout=False)
     m = papy.plot.plot_map(
         plt.gca(),
         av.T,
@@ -233,7 +235,7 @@ if __name__ == '__main__':
                  color='white',
                  ha='center', va='bottom')
 
-    cb = plt.colorbar(m, label='$\\alpha_v$', pad=0)
+    cb = plt.colorbar(m, label='$\\alpha_v$', pad=0.02)
     plt.xlabel('Time')
     plt.ylabel('Position along the loop')
     plt.xticks(ticks=t_ticks, labels=t_ticklabels)
@@ -246,4 +248,5 @@ if __name__ == '__main__':
         ('$\\alpha_{v,f,\\mathrm{min}}$' if args.plot_symbolic
          else av_fulldom_min_print),
         1))
+    plt.tight_layout()
     plt.savefig('data/mock_vrw_av.pdf')
