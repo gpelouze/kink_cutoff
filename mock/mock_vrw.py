@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import argparse
+
 import etframes
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,45 +10,49 @@ import papy
 
 if __name__ == '__main__':
 
-    # mock parameters
-    Nt = 500
-    Nx = 200
-
+    p = argparse.ArgumentParser()
     # pluto parameters
-    tstop = 1400.
-    L = 100
-    all_time = np.linspace(0, tstop, Nt)
-    x = np.linspace(0, L, Nx)
+    p.add_argument('tstop', type=float)
+    p.add_argument('--dt1', type=float, default=0)
+    p.add_argument('--dt2', type=float, default=0)
+    p.add_argument('--dt3', type=float, default=0)
+    p.add_argument('--dt4', type=float, default=0)
+    p.add_argument('--dt5', type=float, default=0)
+    p.add_argument('--dt6', type=float, default=0)
+    p.add_argument('--vrw_av_fulldom_min', type=float, default=0.9)
+    p.add_argument('--vrw_av_layer_min', type=float, default=0.8)
+    p.add_argument('--vrw_x_max_layer', type=float, default=50.)
+    p.add_argument('--L', type=float, default=100)
+    # mock parameters
+    p.add_argument('--Nt', type=int, default=500)
+    p.add_argument('--Nx', type=int, default=200)
+    p.add_argument('--plot-symbolic', action='store_true')
+    args = p.parse_args()
 
-    # pluto userdef parameters
-    dt1 = 200.
-    dt2 = 200.
-    dt3 = 200.
-    dt4 = 200.
-    dt5 = 200
-    dt6 = 200
-    vrw_av_fulldom_min = .8
-    vrw_av_layer_min = .5
-    vrw_x_max_layer = 50.
-
-    # Plot behaviour
-    plot_symbolic = False
+    all_time = np.linspace(0, args.tstop, args.Nt)
+    x = np.linspace(0, args.L, args.Nx)
 
     # mock
-    av = np.full((Nt, Nx), np.nan)
+    av = np.full((args.Nt, args.Nx), np.nan)
     av_fulldom = av.copy()
     av_layer = av.copy()
     bv_layer = av.copy()
 
+    dt1 = args.dt1
+    dt2 = args.dt2
+    dt3 = args.dt3
+    dt4 = args.dt4
+    dt5 = args.dt5
+    dt6 = args.dt6
     t1 = dt1
     t2 = t1 + dt2
     t3 = t2 + dt3
     t4 = t3 + dt4
     t5 = t4 + dt5
     t6 = t5 + dt6
-    av_fulldom_min = vrw_av_fulldom_min
-    av_layer_min = vrw_av_layer_min
-    x_max_layer = vrw_x_max_layer
+    av_fulldom_min = args.vrw_av_fulldom_min
+    av_layer_min = args.vrw_av_layer_min
+    x_max_layer = args.vrw_x_max_layer
 
     for it, g_time in enumerate(all_time):
 
@@ -102,21 +108,21 @@ if __name__ == '__main__':
     t_ticks.update(t_nonzero)
     if all_time.max() not in t_nonzero.values():
         t_ticks['end'] = all_time.max()
-    if plot_symbolic:
+    if args.plot_symbolic:
         t_ticklabels = {i: f'$t_\\mathrm{{{i}}}$' for i, t in t_ticks.items()}
     else:
         t_ticklabels = {i: f'{t:g}' for i, t in t_ticks.items()}
     t_ticks = list(t_ticks.values())
     t_ticklabels = list(t_ticklabels.values())
 
-    x_ticks = [0, x_max_layer, L]
-    if plot_symbolic:
+    x_ticks = [0, x_max_layer, args.L]
+    if args.plot_symbolic:
         x_ticklabels = ['0 (apex)', '$x_{\\mathrm{max},l}$', 'L']
     else:
-        x_ticklabels = [0., float(x_max_layer), float(L)]
+        x_ticklabels = [0., float(x_max_layer), float(args.L)]
     x_ticks_all = x_ticks.copy()
     x_ticklabels_all = x_ticklabels.copy()
-    if t5 >= tstop:
+    if t5 >= args.tstop:
         del x_ticks[1]
         del x_ticklabels[1]
 
@@ -141,7 +147,7 @@ if __name__ == '__main__':
     for i, t in t_nonzero.items():
         if t > 0:
             plt.plot([t, t], [0, 1], color='k', alpha=.2)
-        if plot_symbolic:
+        if args.plot_symbolic:
             plt.text(t-dt[i]/2, -0.075, f'$\\mathrm{{d}}t_{i}$', ha='center', va='top', color='gray')
     plt.legend(frameon=False)
     plt.xlabel('Time')
@@ -150,7 +156,7 @@ if __name__ == '__main__':
     plt.yticks(
         ticks=(0, av_fulldom_min, 1),
         labels=('0',
-                ('$\\alpha_{v,f,\\mathrm{min}}$' if plot_symbolic
+                ('$\\alpha_{v,f,\\mathrm{min}}$' if args.plot_symbolic
                  else f'{av_fulldom_min:g}'),
                 1),
         )
@@ -166,14 +172,14 @@ if __name__ == '__main__':
         color='#008B72',
         label='$\\beta_{v,l}$',
         )
-    plt.plot([vrw_x_max_layer, vrw_x_max_layer], [av_layer_min, 1], color='k', alpha=.2)
+    plt.plot([args.vrw_x_max_layer, args.vrw_x_max_layer], [av_layer_min, 1], color='k', alpha=.2)
     plt.xlabel('Position along the loop')
     plt.ylabel('$\\beta_v$')
     etframes.add_range_frame()
     plt.yticks(
         ticks=(av_layer_min, 1),
         labels=(
-            ('$\\alpha_{v,l,\\mathrm{min}}$' if plot_symbolic
+            ('$\\alpha_{v,l,\\mathrm{min}}$' if args.plot_symbolic
              else av_layer_min),
             1,
             ),
@@ -189,6 +195,7 @@ if __name__ == '__main__':
         aspect=(all_time.ptp() / x.ptp()),
         cmap='gray',
         )
+
     cb = plt.colorbar(m, label='$\\alpha_v$', pad=0)
     plt.xlabel('Time')
     plt.ylabel('Position along the loop')
@@ -197,9 +204,9 @@ if __name__ == '__main__':
     cb.set_ticks((0, av_layer_min, av_fulldom_min, 1))
     cb.set_ticklabels((
         '0',
-        ('$\\alpha_{v,l,\\mathrm{min}}$' if plot_symbolic
+        ('$\\alpha_{v,l,\\mathrm{min}}$' if args.plot_symbolic
          else av_layer_min),
-        ('$\\alpha_{v,f,\\mathrm{min}}$' if plot_symbolic
+        ('$\\alpha_{v,f,\\mathrm{min}}$' if args.plot_symbolic
          else av_fulldom_min),
         1))
     plt.savefig('data/mock_vrw_av.pdf')
