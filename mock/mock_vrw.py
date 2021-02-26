@@ -198,6 +198,29 @@ if __name__ == '__main__':
         cmap='gray',
         )
 
+    if 1 in dt_nonzero:
+        plt.text(dt1/2, args.L/2,
+                 '1.0',
+                 ha='center', va='center')
+    if 3 in dt_nonzero:
+        plt.text(t3-dt3/2, args.L/2,
+                 f'{args.vrw_av_fulldom_min:g}',
+                 color='white',
+                 ha='center', va='center')
+    if 5 in dt_nonzero:
+        plt.text(t5-dt5/2, args.L/2,
+                 '1.0',
+                 ha='center', va='center')
+    if t6 < args.tstop:
+        plt.text(t6+(args.tstop-t6)/2,
+                 args.vrw_x_max_layer + (args.L-args.vrw_x_max_layer)/2,
+                 f'1.0',
+                 ha='center', va='center')
+        plt.text(t6+(args.tstop-t6)/2, 0,
+                 f'{args.vrw_av_layer_min:g}',
+                 color='white',
+                 ha='center', va='bottom')
+
     cb = plt.colorbar(m, label='$\\alpha_v$', pad=0)
     plt.xlabel('Time')
     plt.ylabel('Position along the loop')
