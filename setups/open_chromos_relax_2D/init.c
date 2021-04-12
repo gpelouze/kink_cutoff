@@ -308,59 +308,34 @@ double VelocityRewriteCoeff(double x_loop)
   // retrieve input parameters
   const double dt1 = g_inputParam[VRW_DT1];
   const double dt2 = g_inputParam[VRW_DT2];
-  const double dt3 = g_inputParam[VRW_DT3];
-  const double dt4 = g_inputParam[VRW_DT4];
-  const double dt5 = g_inputParam[VRW_DT5];
-  const double dt6 = g_inputParam[VRW_DT6];
   const double av_fulldom_min = g_inputParam[VRW_AV_FULLDOM_MIN];
   const double av_layer_min = g_inputParam[VRW_AV_LAYER_MIN];
   const double x_max_layer = g_inputParam[VRW_X_MAX_LAYER];
 
   const double t1 = dt1;
   const double t2 = t1 + dt2;
-  const double t3 = t2 + dt3;
-  const double t4 = t3 + dt4;
-  const double t5 = t4 + dt5;
-  const double t6 = t5 + dt6;
 
   // av full domain (time dependence only)
   double av_fulldom;
-  if (g_time < t1) {  // dt1
-    av_fulldom = 1.;
-  }
-  else if (g_time < t2) {  // dt2
-    av_fulldom = 1. - (g_time - t1) * (1. - av_fulldom_min) / dt2;
-  }
-  else if (g_time < t3) {  // dt3
+  if (g_time <= t1) {  // dt1
     av_fulldom = av_fulldom_min;
   }
-  else if (g_time < t4) {  // dt4
-    av_fulldom = av_fulldom_min + (g_time - t3) * (1. - av_fulldom_min) / dt4;
+  else if (g_time <= t2) {  // dt2
+    av_fulldom = av_fulldom_min - (g_time - t1) * av_fulldom_min / dt2;
   }
-  else if (g_time < t5) {  // dt5
-    av_fulldom = 1.;
-  }
-  else if (g_time < t6) {  // dt6
-    if (dt4 == 0. && dt5 == 0.) {
-      av_fulldom = av_fulldom_min - (g_time - t5) * av_fulldom_min / dt6;
-    }
-    else {
-      av_fulldom = 1. - (g_time - t5) / dt6;
-    }
-  }
-  else {  // after dt6
+  else {  // after dt2
     av_fulldom = 0.;
   }
 
   // av boundary layer (time dependence)
   double av_layer;
-  if (g_time < t5) {  // dt1 to dt5
+  if (g_time <= t1) {  // dt1
     av_layer = 0.;
   }
-  else if (g_time < t6) {  // dt6
-    av_layer = (g_time - t5) / dt6;
+  else if (g_time <= t2) {  // dt2
+    av_layer = 1. + (g_time - t2) / dt2;
   }
-  else {  // after dt6
+  else {  // after dt2
     av_layer = 1.;
   }
 
