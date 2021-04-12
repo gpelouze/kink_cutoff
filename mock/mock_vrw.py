@@ -49,17 +49,17 @@ if __name__ == '__main__':
         for ix, _ in enumerate(x):
 
             # alpha_fulldom
-            if g_time < t1:
+            if g_time <= t1:
                 av_fulldom[it, ix] = av_fulldom_min
-            elif g_time < t2:
+            elif g_time <= t2:
                 av_fulldom[it, ix] = av_fulldom_min - (g_time - t1) * av_fulldom_min / dt2
             else:
                 av_fulldom[it, ix] = 0.
 
             # alpha_layer
-            if g_time < t1:
+            if g_time <= t1:
                 av_layer[it, ix] = 0.
-            elif g_time < t2:
+            elif g_time <= t2:
                 av_layer[it, ix] = 1. + (g_time - t2) / dt2
             else:
                 av_layer[it, ix] = 1.
