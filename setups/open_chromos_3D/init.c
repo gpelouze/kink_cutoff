@@ -562,6 +562,87 @@ void EnergyAnalysis (const Data *d, Grid *grid, char* output_file, double x1beg,
 
 }
 
+void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, double x2cut)
+/*! 
+ *  Save cut along a lign
+ *
+ * \param [in] d the PLUTO Data structure
+ * \param [in] grid   pointer to array of Grid structures
+ * \param [in] x1, x2  coordinates of the cut
+ * subdomain (use NAN to get compute over the full domain).
+ *
+ *********************************************************************** */
+{
+
+  int i, j, k, nv, dir, side;
+  double scrhv[3];
+  double send[16], recv[16];
+
+  double *v;
+  v = ARRAY_1D(NVAR, double);
+
+  /* ---- Set pointer shortcuts ---- */
+  double *x, *y, *z;
+  double *dx, *dy, *dz;
+  x = grid->x[IDIR];
+  y = grid->x[JDIR];
+  z = grid->x[KDIR];
+  dx = grid->dx[IDIR];
+  dy = grid->dx[JDIR];
+  dz = grid->dx[KDIR];
+
+  /* ---- Determine cut coordinates ---- */
+  int i0, j0;
+  double delta = 1000.;
+  IDOM_LOOP(i) {
+    if (abs(x[i] - x1cut) < delta) {
+      delta = abs(x[i] - x1cut);
+      i0 = i;
+    }
+  }
+  delta = 1000.;
+  JDOM_LOOP(j) {
+    if (abs(y[j] - x2cut) < delta) {
+      delta = abs(y[j] - x2cut);
+      j0 = j;
+    }
+  }
+  // printf(" ix1 = %d\n", i0);
+  // printf(" ix2 = %d\n", j0);
+  // FIXME: remove printfs
+
+  /* ---- Determine output filename ---- */
+	/* parts copied from WriteData */
+  char filename[512];
+  long long offset;
+  FILE *fbin;
+  void *Vpt;
+  size_t dsize;
+
+	dsize = sizeof(double);
+
+  sprintf(filename, "%s/%s.%.6e.dat", RuntimeGet()->output_dir, output_file, g_t);
+  fbin = FileOpen (filename, 0, "w");
+  offset = 0;
+	for (nv = 0; nv < output->nvar; nv++) {
+		if (!output->dump_var[nv]) continue;
+		Vpt = (void *)output->V[nv][0][0];
+		#ifdef PARALLEL
+			fbin = FileOpen (filename, SZ, "w");
+			AL_Set_offset(SZ, offset);
+		#endif
+		FileWriteData (Vpt, dsize, SZ, fbin, -1);
+		#ifdef PARALLEL
+			offset = AL_Get_offset(SZ);
+			FileClose(fbin, SZ);
+		#endif
+	}
+	#ifndef PARALLEL
+		FileClose(fbin, sz);
+	#endif
+
+}
+
 /* ********************************************************************* */
 void Analysis (const Data *d, Grid *grid)
 /*!
@@ -574,6 +655,7 @@ void Analysis (const Data *d, Grid *grid)
 {
   EnergyAnalysis(d, grid, "energy_all.dat", NAN, NAN, NAN, NAN, NAN, NAN);
   EnergyAnalysis(d, grid, "energy_cor.dat", NAN, NAN, NAN, NAN, NAN, 90.);
+  CutZAnalysis(d, grid, "cut_center", 0., 0.);
 }
 #if PHYSICS == MHD
 /* ********************************************************************* */
