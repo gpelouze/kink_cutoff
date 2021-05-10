@@ -1,9 +1,9 @@
 /* ///////////////////////////////////////////////////////////////////// */
-/*! 
-  \file  
+/*!
+  \file
   \brief Contains basic functions for problem initialization.
 
-  The init.c file collects most of the user-supplied functions useful 
+  The init.c file collects most of the user-supplied functions useful
   for problem configuration.
   It is automatically searched for by the makefile.
 
@@ -28,7 +28,7 @@
 
 /* ********************************************************************* */
 void Init (double *v, double x1, double x2, double x3)
-/*! 
+/*!
  * The Init() function can be used to assign initial conditions as
  * as a function of spatial position.
  *
@@ -44,7 +44,7 @@ void Init (double *v, double x1, double x2, double x3)
  *    x    &   y    &  z   & \mathrm{Cartesian}   \\ \noalign{\medskip}
  *    R    &   z    &  -   & \mathrm{cylindrical} \\ \noalign{\medskip}
  *    R    & \phi   &  z   & \mathrm{polar}       \\ \noalign{\medskip}
- *    r    & \theta & \phi & \mathrm{spherical} 
+ *    r    & \theta & \phi & \mathrm{spherical}
  *    \end{array}
  *  \f]
  *
@@ -81,7 +81,7 @@ double step_function(double x1, double x2, double r) {
  * \param [in] x1  position in the 1st coordinate direction \f$x_1\f$
  * \param [in] x2  position in the 2nd coordinate direction \f$x_2\f$
  * \param [in] r   ratio between the inside and the outside of the step
- * 
+ *
  * \return The value of the step function.
  *********************************************************************** */
   double step;
@@ -90,7 +90,7 @@ double step_function(double x1, double x2, double r) {
   return step;
 }
 
-void InitVariableFromDbl (Data *d, Grid *grid, char *data_dir, char *var, int nv) 
+void InitVariableFromDbl (Data *d, Grid *grid, char *data_dir, char *var, int nv)
 /*!
  * Initialize a given variable from dbl files
  *
@@ -325,7 +325,7 @@ int FluxIndex(int dir, int side)
 }
 
 void EnergyAnalysis (const Data *d, Grid *grid, char* output_file, double x1beg, double x1end, double x2beg, double x2end, double x3beg, double x3end)
-/*! 
+/*!
  *  Perform runtime energy analysis.
  *
  * \param [in] d the PLUTO Data structure
@@ -563,7 +563,7 @@ void EnergyAnalysis (const Data *d, Grid *grid, char* output_file, double x1beg,
 }
 
 void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, double x2cut)
-/*! 
+/*!
  *  Save cut along a lign
  *
  * \param [in] d the PLUTO Data structure
@@ -661,7 +661,7 @@ void Analysis (const Data *d, Grid *grid)
 /* ********************************************************************* */
 void BackgroundField (double x1, double x2, double x3, double *B0)
 /*!
- * Define the component of a static, curl-free background 
+ * Define the component of a static, curl-free background
  * magnetic field.
  *
  * \param [in] x1  position in the 1st coordinate direction \f$x_1\f$
@@ -706,21 +706,21 @@ double VelocityRewriteCoeff(double x_loop)
 }
 
 /* ********************************************************************* */
-void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid) 
-/*! 
+void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
+/*!
  *  Assign user-defined boundary conditions.
  *
  * \param [in,out] d  pointer to the PLUTO data structure containing
- *                    cell-centered primitive quantities (d->Vc) and 
- *                    staggered magnetic fields (d->Vs, when used) to 
+ *                    cell-centered primitive quantities (d->Vc) and
+ *                    staggered magnetic fields (d->Vs, when used) to
  *                    be filled.
  * \param [in] box    pointer to a RBox structure containing the lower
  *                    and upper indices of the ghost zone-centers/nodes
  *                    or edges at which data values should be assigned.
  * \param [in] side   specifies the boundary side where ghost zones need
- *                    to be filled. It can assume the following 
+ *                    to be filled. It can assume the following
  *                    pre-definite values: X1_BEG, X1_END,
- *                                         X2_BEG, X2_END, 
+ *                                         X2_BEG, X2_END,
  *                                         X3_BEG, X3_END.
  *                    The special value side == 0 is used to control
  *                    a region inside the computational domain.
@@ -807,7 +807,7 @@ void BodyForceVector(double *v, double *g, double x1, double x2, double x3)
  * Prescribe the acceleration vector as a function of the coordinates
  * and the vector of primitive variables *v.
  *
- * \param [in] v  pointer to a cell-centered vector of primitive 
+ * \param [in] v  pointer to a cell-centered vector of primitive
  *                variables
  * \param [out] g acceleration vector
  * \param [in] x1  position in the 1st coordinate direction \f$x_1\f$
@@ -828,7 +828,7 @@ double BodyForcePotential(double x1, double x2, double x3)
  * \param [in] x1  position in the 1st coordinate direction \f$x_1\f$
  * \param [in] x2  position in the 2nd coordinate direction \f$x_2\f$
  * \param [in] x3  position in the 3rd coordinate direction \f$x_3\f$
- * 
+ *
  * \return The body force potential \f$ \Phi(x_1,x_2,x_3) \f$.
  *
  *********************************************************************** */
