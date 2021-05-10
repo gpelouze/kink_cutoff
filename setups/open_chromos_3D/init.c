@@ -574,22 +574,13 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
  *********************************************************************** */
 {
 
-  int i, j, k, nv, dir, side;
-  double scrhv[3];
-  double send[16], recv[16];
-
-  double *v;
-  v = ARRAY_1D(NVAR, double);
+  int i, j, k, nv;
 
   /* ---- Set pointer shortcuts ---- */
   double *x, *y, *z;
-  double *dx, *dy, *dz;
   x = grid->x[IDIR];
   y = grid->x[JDIR];
   z = grid->x[KDIR];
-  dx = grid->dx[IDIR];
-  dy = grid->dx[JDIR];
-  dz = grid->dx[KDIR];
 
   /* ---- Determine cut coordinates ---- */
   int i0, j0;
@@ -607,39 +598,46 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
       j0 = j;
     }
   }
-  // printf(" ix1 = %d\n", i0);
-  // printf(" ix2 = %d\n", j0);
-  // FIXME: remove printfs
 
-  /* ---- Determine output filename ---- */
-	/* parts copied from WriteData */
-  char filename[512];
-  long long offset;
-  FILE *fbin;
-  void *Vpt;
-  size_t dsize;
+  /* ---- set local and global array ---- */
+  double **VcZ;
+  double **VcZ_glob;
+  int n_VcZ = NVAR * grid->np_int[KDIR];
+  int n_VcZ_glob = NVAR * grid->np_int_glob[KDIR];
+  /* cut array (local) */
+  VcZ = ARRAY_2D(NVAR, n_VcZ, double);
+  KDOM_LOOP(k) {
+    NVAR_LOOP(nv) {
+      VcZ[nv][k] = d->Vc[nv][k][j0][i0];
+      }
+  }
+  /* receiving array (global) */
+  if (prank == 0) {
+    VcZ_glob = ARRAY_2D(NVAR, n_VcZ_glob, double);
+  }
 
-	dsize = sizeof(double);
+  /* ---- Gather data ---- */
+  #ifdef PARALLEL
+    if (prank == 0) {
+      MPI_Gather(VcZ, n_VcZ, MPI_DOUBLE, &VcZ_glob[0][0], n_VcZ_glob, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    }
+    else {
+      MPI_Gather(VcZ, n_VcZ, MPI_DOUBLE, NULL, 0, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+  #endif
 
-  sprintf(filename, "%s/%s.%.6e.dat", RuntimeGet()->output_dir, output_file, g_t);
-  fbin = FileOpen (filename, 0, "w");
-  offset = 0;
-	for (nv = 0; nv < output->nvar; nv++) {
-		if (!output->dump_var[nv]) continue;
-		Vpt = (void *)output->V[nv][0][0];
-		#ifdef PARALLEL
-			fbin = FileOpen (filename, SZ, "w");
-			AL_Set_offset(SZ, offset);
-		#endif
-		FileWriteData (Vpt, dsize, SZ, fbin, -1);
-		#ifdef PARALLEL
-			offset = AL_Get_offset(SZ);
-			FileClose(fbin, SZ);
-		#endif
-	}
-	#ifndef PARALLEL
-		FileClose(fbin, sz);
-	#endif
+  if (prank == 0) {
+    /* ---- Determine output filename ---- */
+    char filename[512];
+    sprintf(filename, "%s/%s_%.6e.dat", RuntimeGet()->output_dir, output_file, g_time);
+
+    /* ---- Write data ---- */
+    FILE *fp;
+    fp = fopen(filename, "wb");
+    fwrite(VcZ_glob, sizeof(double), n_VcZ_glob, fp);
+    fclose(fp);
+  }
 
 }
 
