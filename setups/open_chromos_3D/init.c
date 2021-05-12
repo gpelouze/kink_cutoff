@@ -618,13 +618,19 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
 
   /* ---- Gather data ---- */
   #ifdef PARALLEL
+    int status;
+    status = MPI_Barrier(MPI_COMM_WORLD);
+    if (status != 0) { printf("MPI_Barrier: %d", status); QUIT_PLUTO(1); }
     if (prank == 0) {
-      MPI_Gather(VcZ, n_VcZ, MPI_DOUBLE, &VcZ_glob[0][0], n_VcZ_glob, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      status = MPI_Gather(VcZ, n_VcZ, MPI_DOUBLE, VcZ_glob, n_VcZ_glob, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      if (status != 0) { printf("MPI_Gather 1: %d", status); QUIT_PLUTO(1); }
     }
     else {
-      MPI_Gather(VcZ, n_VcZ, MPI_DOUBLE, NULL, 0, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      status = MPI_Gather(VcZ, n_VcZ, MPI_DOUBLE, NULL, 0, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      if (status != 0) { printf("MPI_Gather 2: %d", status); QUIT_PLUTO(1); }
     }
-    MPI_Barrier(MPI_COMM_WORLD);
+    status = MPI_Barrier(MPI_COMM_WORLD);
+    if (status != 0) { printf("MPI_Barrier: %d", status); QUIT_PLUTO(1); }
   #endif
 
   if (prank == 0) {
