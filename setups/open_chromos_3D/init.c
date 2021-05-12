@@ -583,20 +583,34 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   z = grid->x[KDIR];
 
   /* ---- Determine cut coordinates ---- */
-  int i0, j0;
-  double delta = 1000.;
-  IDOM_LOOP(i) {
-    if (abs(x[i] - x1cut) < delta) {
-      delta = abs(x[i] - x1cut);
-      i0 = i;
+  int contains_cut, contains_x1cut, contains_x2cut, i0, j0;
+  double delta;
+  // -- cuts needed?
+  contains_x1cut = ((grid->xbeg[IDIR] < x1cut) && (x1cut <= grid->xend[IDIR]));
+  contains_x2cut = ((grid->xbeg[JDIR] < x2cut) && (x2cut <= grid->xend[JDIR]));
+  contains_cut = contains_x1cut & contains_x2cut;
+  // printf("(%d) (%.6g %.6g %.6g) (%.6g %.6g %.6g) %d %d %d\n",
+    // prank,
+    // grid->xbeg[IDIR], x1cut, grid->xend[IDIR],
+    // grid->xbeg[JDIR], x2cut, grid->xend[JDIR],
+    // contains_x1cut, contains_x2cut, contains_cut);
+  // -- cut indice
+  if (contains_cut) {
+    delta = 1000.;
+    IDOM_LOOP(i) {
+      if (abs(x[i] - x1cut) < delta) {
+        delta = abs(x[i] - x1cut);
+        i0 = i;
+      }
     }
-  }
-  delta = 1000.;
-  JDOM_LOOP(j) {
-    if (abs(y[j] - x2cut) < delta) {
-      delta = abs(y[j] - x2cut);
-      j0 = j;
+    delta = 1000.;
+    JDOM_LOOP(j) {
+      if (abs(y[j] - x2cut) < delta) {
+        delta = abs(y[j] - x2cut);
+        j0 = j;
+      }
     }
+  // printf("(%d) i0 j0 = %d %d\n", prank, i0, j0);
   }
 
   /* ---- set local and global array ---- */
