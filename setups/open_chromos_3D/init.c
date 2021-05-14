@@ -624,7 +624,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   if (contains_cut) {
     KDOM_LOOP(k) {
       // NVAR_LOOP(nv) {
-        VcZ[k] = d->Vc[RHO][k][j0][i0];
+        VcZ[k-KBEG] = d->Vc[RHO][k][j0][i0];
         // }
     }
   }
