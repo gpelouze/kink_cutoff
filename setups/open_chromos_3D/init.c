@@ -614,37 +614,46 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   }
 
   /* ---- set local and global array ---- */
-  double **VcZ;
-  double **VcZ_glob;
-  int n_VcZ = NVAR * grid->np_int[KDIR];
-  int n_VcZ_glob = NVAR * grid->np_int_glob[KDIR];
   /* cut array (local) */
-  VcZ = ARRAY_2D(NVAR, n_VcZ, double);
+  double *VcZ;
+  int n_VcZ = grid->np_int[KDIR];
+  VcZ = ARRAY_1D(n_VcZ, double);
   KDOM_LOOP(k) {
-    NVAR_LOOP(nv) {
-      VcZ[nv][k] = d->Vc[nv][k][j0][i0];
-      }
+    // NVAR_LOOP(nv) {
+      VcZ[k] = d->Vc[RHO][k][j0][i0];
+      // }
   }
   /* receiving array (global) */
+  double *VcZ_glob;
+  int n_VcZ_glob = grid->np_int_glob[KDIR];
   if (prank == 0) {
-    VcZ_glob = ARRAY_2D(NVAR, n_VcZ_glob, double);
+    VcZ_glob = ARRAY_1D(n_VcZ_glob, double);
   }
 
   /* ---- Gather data ---- */
   #ifdef PARALLEL
-    int status;
-    status = MPI_Barrier(MPI_COMM_WORLD);
-    if (status != 0) { printf("MPI_Barrier: %d", status); QUIT_PLUTO(1); }
+    void *sendbuf, *recvbuf;
+    int sendcount, recvcount;
     if (prank == 0) {
-      status = MPI_Gather(VcZ, n_VcZ, MPI_DOUBLE, VcZ_glob, n_VcZ_glob, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      if (status != 0) { printf("MPI_Gather 1: %d", status); QUIT_PLUTO(1); }
+      recvbuf = (void *)VcZ_glob;
+      recvcount = n_VcZ_glob;
     }
     else {
-      status = MPI_Gather(VcZ, n_VcZ, MPI_DOUBLE, NULL, 0, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-      if (status != 0) { printf("MPI_Gather 2: %d", status); QUIT_PLUTO(1); }
+      recvbuf = NULL;
+      recvcount = 0;
     }
-    status = MPI_Barrier(MPI_COMM_WORLD);
-    if (status != 0) { printf("MPI_Barrier: %d", status); QUIT_PLUTO(1); }
+    if (contains_cut) {
+      sendbuf = (void *)VcZ;
+      sendcount = n_VcZ;
+    }
+    else {
+      sendbuf = NULL;
+      sendcount = 0;
+    }
+    printf("(%d) %d %d %d\n", prank, contains_cut, sendcount, recvcount);
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Gather(sendbuf, sendcount, MPI_DOUBLE, recvbuf, recvcount, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
   #endif
 
   if (prank == 0) {
