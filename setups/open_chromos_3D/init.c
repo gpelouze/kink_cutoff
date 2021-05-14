@@ -646,6 +646,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   int nproc;
   MPI_Comm_size(MPI_COMM_WORLD, &nproc);
   // ------ Sent data
+  // Only data if cut line goes through the process' subdomain
   void *sendbuf;
   int sendcount;
   if (contains_cut) {
@@ -657,6 +658,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     sendcount = 0;
   }
   // ------ Received data
+  // Receive data with root process
   void *recvbuf;
   int *recvcounts, *displs;
   if (prank == 0) {
