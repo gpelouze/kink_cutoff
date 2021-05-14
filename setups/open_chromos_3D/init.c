@@ -576,25 +576,28 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
 
   int i, j, k, nv;
 
-  /* ---- Set pointer shortcuts ---- */
+  // -- Pointer shortcuts
   double *x, *y, *z;
   x = grid->x[IDIR];
   y = grid->x[JDIR];
   z = grid->x[KDIR];
 
-  /* ---- Determine cut coordinates ---- */
-  int contains_cut, contains_x1cut, contains_x2cut, i0, j0;
-  double delta;
-  // -- cuts needed?
+  // -- Determine cut line goes through this process' subdomain
+  int contains_cut, contains_x1cut, contains_x2cut;
   contains_x1cut = ((grid->xbeg[IDIR] < x1cut) && (x1cut <= grid->xend[IDIR]));
   contains_x2cut = ((grid->xbeg[JDIR] < x2cut) && (x2cut <= grid->xend[JDIR]));
   contains_cut = contains_x1cut & contains_x2cut;
-  // printf("(%d) (%.6g %.6g %.6g) (%.6g %.6g %.6g) %d %d %d\n",
-    // prank,
-    // grid->xbeg[IDIR], x1cut, grid->xend[IDIR],
-    // grid->xbeg[JDIR], x2cut, grid->xend[JDIR],
-    // contains_x1cut, contains_x2cut, contains_cut);
-  // -- cut indice
+
+  printf("a(%d) (%.6g %.6g %.6g) (%.6g %.6g %.6g) %d %d %d\n",
+    prank,
+    grid->xbeg[IDIR], x1cut, grid->xend[IDIR],
+    grid->xbeg[JDIR], x2cut, grid->xend[JDIR],
+    contains_x1cut, contains_x2cut, contains_cut);
+  MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+
+  // -- Determine cut indices
+  int i0, j0;
+  double delta;
   if (contains_cut) {
     delta = 1000.;
     IDOM_LOOP(i) {
@@ -610,58 +613,90 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
         j0 = j;
       }
     }
-  // printf("(%d) i0 j0 = %d %d\n", prank, i0, j0);
   }
+  printf("b(%d) i0 j0 = %d %d\n", prank, i0, j0);
+  MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
 
-  /* ---- set local and global array ---- */
-  /* cut array (local) */
+  // -- Cut array (local)
   double *VcZ;
   int n_VcZ = grid->np_int[KDIR];
   VcZ = ARRAY_1D(n_VcZ, double);
-  KDOM_LOOP(k) {
-    // NVAR_LOOP(nv) {
-      VcZ[k] = d->Vc[RHO][k][j0][i0];
-      // }
+  if (contains_cut) {
+    KDOM_LOOP(k) {
+      // NVAR_LOOP(nv) {
+        VcZ[k] = d->Vc[RHO][k][j0][i0];
+        // }
+    }
   }
-  /* receiving array (global) */
+
+  // -- Init receiving cut array (root process)
   double *VcZ_glob;
   int n_VcZ_glob = grid->np_int_glob[KDIR];
   if (prank == 0) {
     VcZ_glob = ARRAY_1D(n_VcZ_glob, double);
   }
 
-  /* ---- Gather data ---- */
-  #ifdef PARALLEL
-    void *sendbuf, *recvbuf;
-    int sendcount, recvcount;
-    if (prank == 0) {
-      recvbuf = (void *)VcZ_glob;
-      recvcount = n_VcZ_glob;
-    }
-    else {
-      recvbuf = NULL;
-      recvcount = 0;
-    }
-    if (contains_cut) {
-      sendbuf = (void *)VcZ;
-      sendcount = n_VcZ;
-    }
-    else {
-      sendbuf = NULL;
-      sendcount = 0;
-    }
-    printf("(%d) %d %d %d\n", prank, contains_cut, sendcount, recvcount);
-    MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Gather(sendbuf, sendcount, MPI_DOUBLE, recvbuf, recvcount, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Barrier(MPI_COMM_WORLD);
-  #endif
+  // -- Gather data on root process
 
+  // ---- Data counts (for MPI_Gatherv)
+  int nproc;
+  MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+  // ------ Sent data
+  void *sendbuf;
+  int sendcount;
+  if (contains_cut) {
+    sendbuf = (void *)VcZ;
+    sendcount = n_VcZ;
+  }
+  else {
+    sendbuf = NULL;
+    sendcount = 0;
+  }
+  // ------ Received data
+  void *recvbuf;
+  int *recvcounts, *displs;
   if (prank == 0) {
-    /* ---- Determine output filename ---- */
+    recvbuf = (void *)VcZ_glob;
+    recvcounts = ARRAY_1D(nproc, int);
+    displs = ARRAY_1D(nproc, int);
+  }
+  else {
+    recvbuf = NULL;
+    recvcounts = NULL;
+  }
+  // gather sent data size on root process (needed by MPI_Gatherv)
+  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Gather(&sendcount, 1, MPI_INT, (void *)recvcounts, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  // determine displacements (for gatherv)
+  if (prank == 0) {
+    int offset = 0;
+    for (int n = 0; n < nproc; n++) {
+      displs[n] = offset;
+      offset += recvcounts[n];
+    }
+  }
+
+  printf("c(%d) %d: %p, %d, %p, %p\n", prank, contains_cut, sendbuf, sendcount, recvbuf, recvcounts);
+  MPI_Barrier(MPI_COMM_WORLD);
+  if (prank == 0) {
+    printf("c'(%d) %d %d %d %d\n", prank, recvcounts[0], recvcounts[1], recvcounts[2], recvcounts[3]);
+    printf("c'(%d) %d %d %d %d\n", prank, displs[0], displs[1], displs[2], displs[3]);
+  }
+  MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+
+  // ---- Exchange data
+  int status;
+  MPI_Barrier(MPI_COMM_WORLD);
+  status = MPI_Gatherv(sendbuf, sendcount, MPI_DOUBLE, recvbuf, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  printf("d(%d) %d\n", prank, status);
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  // -- Write data to disk
+  if (prank == 0) {
+    // ---- Determine output filename
     char filename[512];
     sprintf(filename, "%s/%s_%.6e.dat", RuntimeGet()->output_dir, output_file, g_time);
-
-    /* ---- Write data ---- */
+    // ---- Write data
     FILE *fp;
     fp = fopen(filename, "wb");
     fwrite(VcZ_glob, sizeof(double), n_VcZ_glob, fp);
