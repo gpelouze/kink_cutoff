@@ -621,17 +621,8 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
   #endif
 
-  // -- Cut array (local)
-  double *VcZ;
+  // -- Cut array size (local)
   int n_VcZ = grid->np_int[KDIR];
-  VcZ = ARRAY_1D(NVAR * n_VcZ, double);
-  if (contains_cut) {
-    KDOM_LOOP(k) {
-      NVAR_LOOP(nv) {
-        VcZ[nv*n_VcZ + (k-KBEG)] = d->Vc[nv][k][j0][i0];
-        }
-    }
-  }
 
   // -- Init receiving cut array (root process)
   double *VcZ_glob;
@@ -647,11 +638,11 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   MPI_Comm_size(MPI_COMM_WORLD, &nproc);
   // ------ Sent data
   // Only data if cut line goes through the process' subdomain
-  void *sendbuf;
+  double *sendbuf;
   int sendcount;
   if (contains_cut) {
-    sendbuf = (void *)VcZ;
-    sendcount = NVAR * n_VcZ;
+    sendbuf = ARRAY_1D(n_VcZ, double);
+    sendcount = n_VcZ;
   }
   else {
     sendbuf = NULL;
@@ -659,10 +650,10 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   }
   // ------ Received data
   // Receive data with root process
-  void *recvbuf;
+  double *recvbuf;
   int *recvcounts, *displs;
   if (prank == 0) {
-    recvbuf = (void *)VcZ_glob;
+    recvbuf = ARRAY_1D(n_VcZ_glob, double);
     recvcounts = ARRAY_1D(nproc, int);
     displs = ARRAY_1D(nproc, int);
   }
@@ -694,7 +685,19 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
 
   // ---- Exchange data
   MPI_Barrier(MPI_COMM_WORLD);
-  MPI_Gatherv(sendbuf, sendcount, MPI_DOUBLE, recvbuf, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  NVAR_LOOP(nv) {
+    if (contains_cut) {
+      KDOM_LOOP(k) {
+        sendbuf[k-KBEG] = d->Vc[nv][k][j0][i0];
+      }
+    }
+    MPI_Gatherv((void *)sendbuf, sendcount, MPI_DOUBLE, (void *)recvbuf, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    if (prank == 0) {
+      for (k = 0; k < n_VcZ_glob; k++) {
+        VcZ_glob[k + n_VcZ_glob * nv] = recvbuf[k];
+      }
+    }
+  }
   MPI_Barrier(MPI_COMM_WORLD);
 
   // -- Write data to disk
