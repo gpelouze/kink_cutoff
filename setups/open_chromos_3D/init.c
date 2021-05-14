@@ -588,12 +588,14 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   contains_x2cut = ((grid->xbeg[JDIR] < x2cut) && (x2cut <= grid->xend[JDIR]));
   contains_cut = contains_x1cut & contains_x2cut;
 
-  printf("a(%d) (%.6g %.6g %.6g) (%.6g %.6g %.6g) %d %d %d\n",
-    prank,
-    grid->xbeg[IDIR], x1cut, grid->xend[IDIR],
-    grid->xbeg[JDIR], x2cut, grid->xend[JDIR],
-    contains_x1cut, contains_x2cut, contains_cut);
-  MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+  #if DEBUG == TRUE
+    printf("a(%d) (%.6g %.6g %.6g) (%.6g %.6g %.6g) %d %d %d\n",
+      prank,
+      grid->xbeg[IDIR], x1cut, grid->xend[IDIR],
+      grid->xbeg[JDIR], x2cut, grid->xend[JDIR],
+      contains_x1cut, contains_x2cut, contains_cut);
+    MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+  #endif
 
   // -- Determine cut indices
   int i0, j0;
@@ -614,8 +616,10 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
       }
     }
   }
-  printf("b(%d) i0 j0 = %d %d\n", prank, i0, j0);
-  MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+  #if DEBUG == TRUE
+    printf("b(%d) i0 j0 = %d %d\n", prank, i0, j0);
+    MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+  #endif
 
   // -- Cut array (local)
   double *VcZ;
@@ -676,19 +680,19 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     }
   }
 
-  printf("c(%d) %d: %p, %d, %p, %p\n", prank, contains_cut, sendbuf, sendcount, recvbuf, recvcounts);
-  MPI_Barrier(MPI_COMM_WORLD);
-  if (prank == 0) {
-    printf("c'(%d) %d %d %d %d\n", prank, recvcounts[0], recvcounts[1], recvcounts[2], recvcounts[3]);
-    printf("c'(%d) %d %d %d %d\n", prank, displs[0], displs[1], displs[2], displs[3]);
-  }
-  MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+  #if DEBUG == TRUE
+    printf("c(%d) %d: %p, %d, %p, %p\n", prank, contains_cut, sendbuf, sendcount, recvbuf, recvcounts);
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (prank == 0) {
+      printf("c'(%d) %d %d %d %d\n", prank, recvcounts[0], recvcounts[1], recvcounts[2], recvcounts[3]);
+      printf("c'(%d) %d %d %d %d\n", prank, displs[0], displs[1], displs[2], displs[3]);
+    }
+    MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+  #endif
 
   // ---- Exchange data
-  int status;
   MPI_Barrier(MPI_COMM_WORLD);
-  status = MPI_Gatherv(sendbuf, sendcount, MPI_DOUBLE, recvbuf, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-  printf("d(%d) %d\n", prank, status);
+  MPI_Gatherv(sendbuf, sendcount, MPI_DOUBLE, recvbuf, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Barrier(MPI_COMM_WORLD);
 
   // -- Write data to disk
