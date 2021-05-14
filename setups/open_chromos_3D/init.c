@@ -620,12 +620,12 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   // -- Cut array (local)
   double *VcZ;
   int n_VcZ = grid->np_int[KDIR];
-  VcZ = ARRAY_1D(n_VcZ, double);
+  VcZ = ARRAY_1D(NVAR * n_VcZ, double);
   if (contains_cut) {
     KDOM_LOOP(k) {
-      // NVAR_LOOP(nv) {
-        VcZ[k-KBEG] = d->Vc[RHO][k][j0][i0];
-        // }
+      NVAR_LOOP(nv) {
+        VcZ[nv*n_VcZ + (k-KBEG)] = d->Vc[nv][k][j0][i0];
+        }
     }
   }
 
@@ -633,7 +633,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   double *VcZ_glob;
   int n_VcZ_glob = grid->np_int_glob[KDIR];
   if (prank == 0) {
-    VcZ_glob = ARRAY_1D(n_VcZ_glob, double);
+    VcZ_glob = ARRAY_1D(NVAR * n_VcZ_glob, double);
   }
 
   // -- Gather data on root process
@@ -646,7 +646,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   int sendcount;
   if (contains_cut) {
     sendbuf = (void *)VcZ;
-    sendcount = n_VcZ;
+    sendcount = NVAR * n_VcZ;
   }
   else {
     sendbuf = NULL;
@@ -699,7 +699,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     // ---- Write data
     FILE *fp;
     fp = fopen(filename, "wb");
-    fwrite(VcZ_glob, sizeof(double), n_VcZ_glob, fp);
+    fwrite(VcZ_glob, sizeof(double), NVAR * n_VcZ_glob, fp);
     fclose(fp);
   }
 
