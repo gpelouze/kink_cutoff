@@ -709,32 +709,32 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     static int nfile = -1;
     sprintf(filename, "%s/%s.list.out", RuntimeGet()->output_dir, output_file);
     if (g_stepNumber == 0) {
-      printf("A\n");
       // Open file for writing when starting sim from 0
       fp = fopen(filename, "w");
     } else {
-      printf("B\n");
       // Append to file if not starting sim from 0.
       // In this case, time coordinate of to last written row when starting the
       // simulation.
       if (tpos < 0) {
-        printf("C\n");
         char sline[512];
         fp = fopen(filename, "r");
         while (fgets(sline, 512, fp)) {}
         sscanf(sline, "%d %lf\n", &nfile, &tpos); // tpos = time of the last written row
-        printf("(%d %g)\n", nfile, tpos);
+        #if DEBUG == TRUE
+          printf("(%d %g)\n", nfile, tpos);
+        #endif
         fclose(fp);
       }
       fp = fopen(filename, "a");
     }
     if (g_time > tpos) {
-      printf("D\n");
       // Write if current time if > tpos
       nfile += 1;
       fprintf(fp, "%d %12.6e %12.6e %ld\n", nfile, g_time, g_dt, g_stepNumber);
     }
-    printf("-> %d %g %g\n", nfile, g_time, tpos);
+    #if DEBUG == TRUE
+      printf("-> %d %g %g\n", nfile, g_time, tpos);
+    #endif
     fclose(fp);
 
     // ---- Write binary data
