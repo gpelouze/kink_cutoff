@@ -545,9 +545,11 @@ void EnergyAnalysis (const Data *d, Grid *grid, char* output_file, double x1beg,
       if (tpos < 0.0) { /* Obtain time coordinate of to last written row */
         char sline[512];
         fp = fopen(fname,"r");
-        while (fgets(sline, 512, fp)) {}
-        sscanf(sline, "%lf\n",&tpos); /* tpos = time of the last written row */
-        fclose(fp);
+        if (fp != NULL) {
+          while (fgets(sline, 512, fp)) {}
+          sscanf(sline, "%lf\n",&tpos); /* tpos = time of the last written row */
+          fclose(fp);
+        }
       }
       fp = fopen(fname,"a");
     }
@@ -718,12 +720,14 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
       if (tpos < 0) {
         char sline[512];
         fp = fopen(filename, "r");
-        while (fgets(sline, 512, fp)) {}
-        sscanf(sline, "%d %lf\n", &nfile, &tpos); // tpos = time of the last written row
-        #if DEBUG == TRUE
-          printf("(%d %g)\n", nfile, tpos);
-        #endif
-        fclose(fp);
+        if (fp != NULL) {
+          while (fgets(sline, 512, fp)) {}
+          sscanf(sline, "%d %lf\n", &nfile, &tpos); // tpos = time of the last written row
+          #if DEBUG == TRUE
+            printf("(%d %g)\n", nfile, tpos);
+          #endif
+          fclose(fp);
+        }
       }
       fp = fopen(filename, "a");
     }
