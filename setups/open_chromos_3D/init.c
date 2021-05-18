@@ -591,12 +591,12 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   contains_cut = contains_x1cut & contains_x2cut;
 
   #if DEBUG == TRUE
-    printf("a(%d) (%.6g %.6g %.6g) (%.6g %.6g %.6g) %d %d %d\n",
+    print("a(%d) (%.6g %.6g %.6g) (%.6g %.6g %.6g) %d %d %d\n",
       prank,
       grid->xbeg[IDIR], x1cut, grid->xend[IDIR],
       grid->xbeg[JDIR], x2cut, grid->xend[JDIR],
       contains_x1cut, contains_x2cut, contains_cut);
-    MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+    MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) print("----------------\n");
   #endif
 
   // -- Determine cut indices
@@ -619,8 +619,8 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     }
   }
   #if DEBUG == TRUE
-    printf("b(%d) i0 j0 = %d %d\n", prank, i0, j0);
-    MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+    print("b(%d) i0 j0 = %d %d\n", prank, i0, j0);
+    MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) print("----------------\n");
   #endif
 
   // -- Cut array size (local)
@@ -676,13 +676,13 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   }
 
   #if DEBUG == TRUE
-    printf("c(%d) %d: %p, %d, %p, %p\n", prank, contains_cut, sendbuf, sendcount, recvbuf, recvcounts);
+    print("c(%d) %d: %p, %d, %p, %p\n", prank, contains_cut, sendbuf, sendcount, recvbuf, recvcounts);
     MPI_Barrier(MPI_COMM_WORLD);
     if (prank == 0) {
-      printf("c'(%d) %d %d %d %d\n", prank, recvcounts[0], recvcounts[1], recvcounts[2], recvcounts[3]);
-      printf("c'(%d) %d %d %d %d\n", prank, displs[0], displs[1], displs[2], displs[3]);
+      print("c'(%d) %d %d %d %d\n", prank, recvcounts[0], recvcounts[1], recvcounts[2], recvcounts[3]);
+      print("c'(%d) %d %d %d %d\n", prank, displs[0], displs[1], displs[2], displs[3]);
     }
-    MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) printf("----------------\n");
+    MPI_Barrier(MPI_COMM_WORLD); if (prank == 0) print("----------------\n");
   #endif
 
   // ---- Exchange data
@@ -724,7 +724,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
           while (fgets(sline, 512, fp)) {}
           sscanf(sline, "%d %lf\n", &nfile, &tpos); // tpos = time of the last written row
           #if DEBUG == TRUE
-            printf("(%d %g)\n", nfile, tpos);
+            print("(%d %g)\n", nfile, tpos);
           #endif
           fclose(fp);
         }
@@ -737,7 +737,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
       fprintf(fp, "%d %12.6e %12.6e %ld\n", nfile, g_time, g_dt, g_stepNumber);
     }
     #if DEBUG == TRUE
-      printf("-> %d %g %g\n", nfile, g_time, tpos);
+      print("-> %d %g %g\n", nfile, g_time, tpos);
     #endif
     fclose(fp);
 
