@@ -764,7 +764,10 @@ void Analysis (const Data *d, Grid *grid)
 {
   EnergyAnalysis(d, grid, "energy_all.dat", NAN, NAN, NAN, NAN, NAN, NAN);
   EnergyAnalysis(d, grid, "energy_cor.dat", NAN, NAN, NAN, NAN, NAN, 90.);
-  CutZAnalysis(d, grid, "cut_center", 0., 0.);
+  CutZAnalysis(d, grid, "cut_center_pp", +.02, +.02);
+  CutZAnalysis(d, grid, "cut_center_pm", +.02, -.02);
+  CutZAnalysis(d, grid, "cut_center_mp", -.02, +.02);
+  CutZAnalysis(d, grid, "cut_center_mm", -.02, -.02);
 }
 #if PHYSICS == MHD
 /* ********************************************************************* */
