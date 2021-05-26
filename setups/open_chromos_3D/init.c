@@ -697,13 +697,22 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     static double tpos = -1.;
     static int nfile = -1;
     sprintf(filename, "%s/%s.list.out", RuntimeGet()->output_dir, output_file);
+    #if DEBUG == TRUE
+      print("    [CutZ output %s ", filename);
+    #endif
     if (g_stepNumber == 0) {
       // Open file for writing when starting sim from 0
+      #if DEBUG == TRUE
+        print("A ");
+      #endif
       fp = fopen(filename, "w");
     } else {
       // Append to file if not starting sim from 0.
       // In this case, time coordinate of to last written row when starting the
       // simulation.
+      #if DEBUG == TRUE
+        print("B ");
+      #endif
       if (tpos < 0) {
         char sline[512];
         fp = fopen(filename, "r");
@@ -712,15 +721,24 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
           sscanf(sline, "%d %lf\n", &nfile, &tpos); // tpos = time of the last written row
           fclose(fp);
         }
+        #if DEBUG == TRUE
+          print("nfile=%d tpos=%g ", nfile, tpos);
+        #endif
       }
       fp = fopen(filename, "a");
     }
     if (g_time > tpos) {
       // Write if current time if > tpos
+      #if DEBUG == TRUE
+        print("C ");
+      #endif
       nfile += 1;
       fprintf(fp, "%d %12.6e %12.6e %ld\n", nfile, g_time, g_dt, g_stepNumber);
     }
     fclose(fp);
+    #if DEBUG == TRUE
+      print("   %d %12.6e]\n", nfile, g_time);
+    #endif
 
     // ---- Write binary data
     // ------ Determine output filename
