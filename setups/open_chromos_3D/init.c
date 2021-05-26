@@ -698,8 +698,8 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     FILE *fp_list, *fp_bin;
 
     // ---- Open list file
-    static double tpos = -1.;
-    static int nfile = -1;
+    double tpos = -1.;
+    int nfile = -1;
     sprintf(filename, "%s/%s.list.out", RuntimeGet()->output_dir, output_file);
     #if DEBUG == TRUE
       print("    [CutZ output %s ", filename);
