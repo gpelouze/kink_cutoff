@@ -731,13 +731,13 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
       }
       fp_list = fopen(filename, "a");
     }
+    #if DEBUG == TRUE
+      print("]\n");
+    #endif
 
     // ---- Write data
     if (g_time > tpos) {
       // Write if current time if > tpos
-      #if DEBUG == TRUE
-        print("C  %d %12.6e]\n", nfile, g_time);
-      #endif
       nfile += 1;
 
       // ----- Write to list file
