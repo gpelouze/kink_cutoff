@@ -695,8 +695,9 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   // -- Write data to disk
   if (prank == 0) {
     char filename[512];
-    FILE *fp;
-    // ---- list file
+    FILE *fp_list, *fp_bin;
+
+    // ---- Open list file
     static double tpos = -1.;
     static int nfile = -1;
     sprintf(filename, "%s/%s.list.out", RuntimeGet()->output_dir, output_file);
@@ -708,7 +709,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
       #if DEBUG == TRUE
         print("A ");
       #endif
-      fp = fopen(filename, "w");
+      fp_list = fopen(filename, "w");
     } else {
       // Append to file if not starting sim from 0.
       // In this case, time coordinate of to last written row when starting the
@@ -718,43 +719,46 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
       #endif
       if (tpos < 0) {
         char sline[512];
-        fp = fopen(filename, "r");
-        if (fp != NULL) {
-          while (fgets(sline, 512, fp)) {}
+        fp_list = fopen(filename, "r");
+        if (fp_list != NULL) {
+          while (fgets(sline, 512, fp_list)) {}
           sscanf(sline, "%d %lf\n", &nfile, &tpos); // tpos = time of the last written row
-          fclose(fp);
+          fclose(fp_list);
         }
         #if DEBUG == TRUE
           print("nfile=%d tpos=%g ", nfile, tpos);
         #endif
       }
-      fp = fopen(filename, "a");
+      fp_list = fopen(filename, "a");
     }
+
+    // ---- Write data
     if (g_time > tpos) {
       // Write if current time if > tpos
       #if DEBUG == TRUE
-        print("C ");
+        print("C  %d %12.6e]\n", nfile, g_time);
       #endif
       nfile += 1;
-      fprintf(fp, "%d %16.10e %12.6e %ld\n", nfile, g_time, g_dt, g_stepNumber);
+
+      // ----- Write to list file
+      fprintf(fp_list, "%d %16.10e %12.6e %ld\n", nfile, g_time, g_dt, g_stepNumber);
+
+      // ----- Write binary data
+      // ------ Determine output filename
+      sprintf(filename, "%s/%s.%04d.dat", RuntimeGet()->output_dir, output_file, nfile);
+      // ------ Write data
+      fp_bin = fopen(filename, "wb");
+      fwrite(VcZ_glob, sizeof(double), NVAR * n_VcZ_glob, fp_bin);
+      fclose(fp_bin);
+
+      // ----- log message
+      print("> Writing CutZ file %s to disk (x=%g y=%g t=%g)]\n",
+        filename, x[i0], y[j0], g_time);
+
     }
-    fclose(fp);
-    #if DEBUG == TRUE
-      print("   %d %12.6e]\n", nfile, g_time);
-    #endif
 
-    // ---- Write binary data
-    // ------ Determine output filename
-    sprintf(filename, "%s/%s.%04d.dat", RuntimeGet()->output_dir, output_file, nfile);
-    // ------ Write data
-    fp = fopen(filename, "wb");
-    fwrite(VcZ_glob, sizeof(double), NVAR * n_VcZ_glob, fp);
-    fclose(fp);
-
-    print("    [CutZ %s (%g %g) %g %d]\n",
-      filename,
-      x[i0], y[j0],
-      g_time, g_stepNumber);
+    // ---- Close list file
+    fclose(fp_list);
 
   }
 
