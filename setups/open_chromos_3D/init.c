@@ -612,10 +612,13 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     }
   }
 
-  print("    [CutZ (%+.6g %+.6g %+.6g)>%d (%.6g %.6g %.6g)>%d (%d %d)]\n",
+  #if DEBUG == TRUE
+  print("    [CutZ slice (%+.6g %+.6g %+.6g)>%d (%.6g %.6g %.6g)>%d (%d %d) (%.6g %.6g)]\n",
     grid->xbeg[IDIR], x1cut, grid->xend[IDIR], contains_x1cut,
     grid->xbeg[JDIR], x2cut, grid->xend[JDIR], contains_x2cut,
-    i0, j0);
+    i0, j0,
+    x[i0], y[j0]);
+  #endif
 
   // -- Cut array size (local)
   int n_VcZ = grid->np_int[KDIR];
@@ -748,7 +751,10 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     fwrite(VcZ_glob, sizeof(double), NVAR * n_VcZ_glob, fp);
     fclose(fp);
 
-    print("    [CutZ %s %g %d]\n", filename, g_time, g_stepNumber);
+    print("    [CutZ %s (%g %g) %g %d]\n",
+      filename,
+      x[i0], y[j0],
+      g_time, g_stepNumber);
 
   }
 
