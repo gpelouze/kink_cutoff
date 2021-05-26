@@ -733,7 +733,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
         print("C ");
       #endif
       nfile += 1;
-      fprintf(fp, "%d %12.6e %12.6e %ld\n", nfile, g_time, g_dt, g_stepNumber);
+      fprintf(fp, "%d %16.10e %12.6e %ld\n", nfile, g_time, g_dt, g_stepNumber);
     }
     fclose(fp);
     #if DEBUG == TRUE
