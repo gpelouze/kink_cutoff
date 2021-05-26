@@ -575,6 +575,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
  *
  *********************************************************************** */
 {
+  DEBUG_FUNC_BEG("CutZAnalysis");
 
   int i, j, k, nv;
 
@@ -590,16 +591,9 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   contains_x2cut = ((grid->xbeg[JDIR] < x2cut) && (x2cut <= grid->xend[JDIR]));
   contains_cut = contains_x1cut & contains_x2cut;
 
-  #if DEBUG == TRUE
-    print("a(%d) (%.6g %.6g %.6g) (%.6g %.6g %.6g) %d %d %d\n",
-      prank,
-      grid->xbeg[IDIR], x1cut, grid->xend[IDIR],
-      grid->xbeg[JDIR], x2cut, grid->xend[JDIR],
-      contains_x1cut, contains_x2cut, contains_cut);
-  #endif
-
   // -- Determine cut indices
-  int i0, j0;
+  int i0 = -1;
+  int j0 = -1;
   double delta;
   if (contains_cut) {
     delta = 1000.;
@@ -617,9 +611,11 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
       }
     }
   }
-  #if DEBUG == TRUE
-    print("b(%d) i0 j0 = %d %d\n", prank, i0, j0);
-  #endif
+
+  print("    [CutZ (%+.6g %+.6g %+.6g)>%d (%.6g %.6g %.6g)>%d (%d %d)]\n",
+    grid->xbeg[IDIR], x1cut, grid->xend[IDIR], contains_x1cut,
+    grid->xbeg[JDIR], x2cut, grid->xend[JDIR], contains_x2cut,
+    i0, j0);
 
   // -- Cut array size (local)
   int n_VcZ = grid->np_int[KDIR];
@@ -675,14 +671,6 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     }
   }
 
-  #if DEBUG == TRUE
-    print("c(%d) %d: %p, %d, %p, %p\n", prank, contains_cut, sendbuf, sendcount, recvbuf, recvcounts);
-    if (prank == 0) {
-      print("c'(%d) %d %d %d %d\n", prank, recvcounts[0], recvcounts[1], recvcounts[2], recvcounts[3]);
-      print("c'(%d) %d %d %d %d\n", prank, displs[0], displs[1], displs[2], displs[3]);
-    }
-  #endif
-
   // ---- Exchange data
   NVAR_LOOP(nv) {
     if (contains_cut) {
@@ -690,97 +678,49 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
         sendbuf[k-KBEG] = d->Vc[nv][k][j0][i0];
       }
     }
-    #if DEBUG == TRUE
-      print("d1(%d) buffers set up\n", prank);
-    #endif
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Gatherv((void *)sendbuf, sendcount, MPI_DOUBLE, (void *)recvbuf, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
-    #if DEBUG == TRUE
-      print("d2(%d) data exchanged\n", prank);
-    #endif
     if (prank == 0) {
       for (k = 0; k < n_VcZ_glob; k++) {
         VcZ_glob[k + n_VcZ_glob * nv] = recvbuf[k];
       }
     }
-    #if DEBUG == TRUE
-      print("d3(%d) data retreived from buffer\n", prank);
-    #endif
   }
 
 
   // -- Write data to disk
   if (prank == 0) {
-    #if DEBUG == TRUE
-      print("e1\n");
-    #endif
     char filename[512];
     FILE *fp;
     // ---- list file
     static double tpos = -1.;
     static int nfile = -1;
     sprintf(filename, "%s/%s.list.out", RuntimeGet()->output_dir, output_file);
-    #if DEBUG == TRUE
-      print("e2\n");
-    #endif
     if (g_stepNumber == 0) {
       // Open file for writing when starting sim from 0
-      #if DEBUG == TRUE
-        print("e3\n");
-      #endif
       fp = fopen(filename, "w");
-      #if DEBUG == TRUE
-        print("e4\n");
-      #endif
     } else {
       // Append to file if not starting sim from 0.
       // In this case, time coordinate of to last written row when starting the
       // simulation.
-      #if DEBUG == TRUE
-        print("e5\n");
-      #endif
       if (tpos < 0) {
         char sline[512];
         fp = fopen(filename, "r");
         if (fp != NULL) {
           while (fgets(sline, 512, fp)) {}
           sscanf(sline, "%d %lf\n", &nfile, &tpos); // tpos = time of the last written row
-          #if DEBUG == TRUE
-            print("(%d %g)\n", nfile, tpos);
-          #endif
           fclose(fp);
         }
       }
-      #if DEBUG == TRUE
-        print("e5\n");
-      #endif
       fp = fopen(filename, "a");
-      #if DEBUG == TRUE
-        print("e6\n");
-      #endif
     }
-    #if DEBUG == TRUE
-      print("e7\n");
-    #endif
     if (g_time > tpos) {
-      #if DEBUG == TRUE
-        print("e8\n");
-      #endif
       // Write if current time if > tpos
       nfile += 1;
       fprintf(fp, "%d %12.6e %12.6e %ld\n", nfile, g_time, g_dt, g_stepNumber);
-      #if DEBUG == TRUE
-        print("e9\n");
-      #endif
     }
-    #if DEBUG == TRUE
-      print("-> %d %g %g\n", nfile, g_time, tpos);
-    #endif
     fclose(fp);
-    #if DEBUG == TRUE
-      print("e10\n");
-    #endif
 
     // ---- Write binary data
     // ------ Determine output filename
@@ -789,11 +729,12 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
     fp = fopen(filename, "wb");
     fwrite(VcZ_glob, sizeof(double), NVAR * n_VcZ_glob, fp);
     fclose(fp);
-    #if DEBUG == TRUE
-      print("e11\n");
-    #endif
+
+    print("    [CutZ %s %g %d]\n", filename, g_time, g_stepNumber);
+
   }
 
+  DEBUG_FUNC_END("CutZAnalysis");
 }
 
 /* ********************************************************************* */
