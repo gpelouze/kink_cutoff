@@ -253,14 +253,12 @@ void PoyntingFlux(const Data *d, Grid *grid, double *S, int i, int j, int k)
  *
  *********************************************************************** */
 {
+  // Resistivity
+  #if RESISTIVITY != NO
   int nv;
   double *v;
   double J[3], eta[3];
-
   v = ARRAY_1D(NVAR, double);
-
-  // Resistivity
-  #if RESISTIVITY != NO
   ElectricCurrent(d, grid, J, i, j, k);
   NVAR_LOOP(nv) { v[nv] = d->Vc[nv][k][j][i]; }
   Resistive_eta(v, grid->x[IDIR][i], grid->x[JDIR][j], grid->x[KDIR][k], J, eta);
@@ -580,10 +578,9 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   int i, j, k, nv;
 
   // -- Pointer shortcuts
-  double *x, *y, *z;
+  double *x, *y;
   x = grid->x[IDIR];
   y = grid->x[JDIR];
-  z = grid->x[KDIR];
 
   // -- Determine cut line goes through this process' subdomain
   int contains_cut, contains_x1cut, contains_x2cut;
@@ -629,6 +626,9 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   if (prank == 0) {
     VcZ_glob = ARRAY_1D(NVAR * n_VcZ_glob, double);
   }
+  else {
+    VcZ_glob = NULL;
+  }
 
   // -- Gather data on root process
 
@@ -659,6 +659,7 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   else {
     recvbuf = NULL;
     recvcounts = NULL;
+    displs = NULL;
   }
   // gather sent data size on root process (needed by MPI_Gatherv)
   MPI_Barrier(MPI_COMM_WORLD);
@@ -856,7 +857,6 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   int   i, j, k;
   double  *x1, *x2, *x3;
   double phase, vnew, x1new, x2new, profile, profile1, profile2, Temp, strat;
-  double av, av_min;
 
   double radius = g_inputParam[STEP_R];
 
