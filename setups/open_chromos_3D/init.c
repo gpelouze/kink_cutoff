@@ -598,15 +598,15 @@ void CutZAnalysis(const Data *d, Grid *grid, char* output_file, double x1cut, do
   if (contains_cut) {
     delta = 1000.;
     IDOM_LOOP(i) {
-      if (abs(x[i] - x1cut) < delta) {
-        delta = abs(x[i] - x1cut);
+      if (fabs(x[i] - x1cut) < delta) {
+        delta = fabs(x[i] - x1cut);
         i0 = i;
       }
     }
     delta = 1000.;
     JDOM_LOOP(j) {
-      if (abs(y[j] - x2cut) < delta) {
-        delta = abs(y[j] - x2cut);
+      if (fabs(y[j] - x2cut) < delta) {
+        delta = fabs(y[j] - x2cut);
         j0 = j;
       }
     }
