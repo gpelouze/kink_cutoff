@@ -887,7 +887,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
         // Velocity (driver)
         phase = 2 * g_time * CONST_PI / period;
         vnew = pulseAmp * cos(phase);
-        x1new = x1[i] - pulseAmp * (period * 0.5 / CONST_PI) * sin(phase);
+        x1new = x1[i];
         x2new = x2[j];
         profile = 0.5 * (1 - tanh(((sqrt(pow(x1new, 2) + pow(x2new, 2)) / radius) - 1 ) * g_inputParam[STEP_b]));
         profile1 = pow(radius, 2) * (pow(x1new, 2) - pow(x2new, 2)) / pow(pow(x1new, 2) + pow(x2new, 2), 2);
