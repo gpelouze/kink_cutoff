@@ -841,7 +841,48 @@ void LoadTabVelocity(char *fname, double *t, double *v)
  *
  *********************************************************************** */
 {
-// TODO
+
+  FILE *fp;
+  char sline[512];
+
+  // Get number of lines
+  int n_lines = 0;
+  fp = fopen(fname, "r");
+  if (fp != NULL) {
+    while (fgets(sline, 512, fp)) {
+      n_lines += 1;
+    }
+    fclose(fp);
+  }
+  else {
+    print("! Can't read file %s\n", fname);
+    QUIT_PLUTO(1);
+  }
+
+  // Allocate memory
+  t = ARRAY_1D(n_lines, double);
+  v = ARRAY_1D(n_lines, double);
+
+  // Load data
+  double t_in, v_in;
+  fp = fopen(fname, "r");
+  if (fp != NULL) {
+    for (int i = 0; i < n_lines; i++) {
+      // I assume that n_lines won't change since counting them, because the
+      // velocity file is only an input. If it wasn't the case, this could
+      // trigger some segfault.
+      fgets(sline, 512, fp);
+      sscanf(sline, "%lf %lf\n", &t_in, &v_in);
+      t[i] = t_in;
+      v[i] = v_in;
+    }
+    fclose(fp);
+  }
+  else {
+    print("! Can't read file %s\n", fname);
+    QUIT_PLUTO(1);
+  }
+
 }
 
 double InterpTabVelocity(double t, double *t_data, double *v_data)
