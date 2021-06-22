@@ -831,6 +831,34 @@ double VelocityRewriteCoeff(double x_loop)
   return bv_layer;
 }
 
+void LoadTabVelocity(char *fname, double *t, double *v)
+/*!
+ *  Load tabulated driver velocity
+ *
+ * \param [in] fname  the name of the input data file
+ * \param [out] t     pointer to the time coordinates
+ * \param [out] v     pointer to the velocity values
+ *
+ *********************************************************************** */
+{
+// TODO
+}
+
+double InterpTabVelocity(double t, double *t_data, double *v_data)
+/*!
+ *  Interpolate tabulated driver velocity at a given time
+ *
+ * \param [in] t       time at which to interpolate the velocity
+ * \param [in] t_data  pointer to the time coordinates
+ * \param [in] v_data  pointer to the velocity values
+ *
+ * \return the velocity at time t
+ *
+ *********************************************************************** */
+{
+// TODO
+}
+
 /* ********************************************************************* */
 void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 /*!
@@ -856,12 +884,13 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 {
   int   i, j, k;
   double  *x1, *x2, *x3;
-  double phase, vnew, x1new, x2new, profile, profile1, profile2, Temp, strat;
+  double vnew, x1new, x2new, profile, profile1, profile2, Temp, strat;
 
   double radius = g_inputParam[STEP_R];
 
-  double period = g_inputParam[DRIVER_P] / (UNIT_LENGTH / UNIT_VELOCITY);
-  double pulseAmp = g_inputParam[DRIVER_v0] / UNIT_VELOCITY;
+  // load tabulated data
+  double *tab_vel_t, *tab_vel_v;
+  LoadTabVelocity("velocity.dat", tab_vel_t, tab_vel_v);
 
   x1 = grid->x[IDIR];
   x2 = grid->x[JDIR];
@@ -885,8 +914,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
         #endif
 
         // Velocity (driver)
-        phase = 2 * g_time * CONST_PI / period;
-        vnew = pulseAmp * cos(phase);
+        vnew = InterpTabVelocity(g_time, tab_vel_t, tab_vel_v);
         x1new = x1[i];
         x2new = x2[j];
         profile = 0.5 * (1 - tanh(((sqrt(pow(x1new, 2) + pow(x2new, 2)) / radius) - 1 ) * g_inputParam[STEP_b]));
