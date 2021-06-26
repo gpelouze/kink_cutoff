@@ -883,6 +883,7 @@ void LoadTabVelocity(char *fname, double *t, double *v)
     QUIT_PLUTO(1);
   }
 
+  printf("%g\n", v[1830]);
 }
 
 double InterpTabVelocity(double t, double *t_data, double *v_data)
@@ -897,7 +898,7 @@ double InterpTabVelocity(double t, double *t_data, double *v_data)
  *
  *********************************************************************** */
 {
-// TODO
+  return 0.;
 }
 
 /* ********************************************************************* */
@@ -930,8 +931,15 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   double radius = g_inputParam[STEP_R];
 
   // load tabulated data
-  double *tab_vel_t, *tab_vel_v;
-  LoadTabVelocity("velocity.dat", tab_vel_t, tab_vel_v);
+  static int tab_vel_is_loaded = NO;
+  static double *tab_vel_t, *tab_vel_v;
+  if (tab_vel_is_loaded != YES) {
+    printf("Loading velocity\n");
+    LoadTabVelocity("velocity.dat", tab_vel_t, tab_vel_v);
+    MPI_Barrier(MPI_COMM_WORLD);
+    // printf("%g\n", tab_vel_v[1830]);
+    tab_vel_is_loaded = YES;
+  }
 
   x1 = grid->x[IDIR];
   x2 = grid->x[JDIR];
