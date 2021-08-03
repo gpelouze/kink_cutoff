@@ -864,7 +864,7 @@ double* LoadTabVelocity(char *fname)
   double *v = ARRAY_1D(n_lines, double);
 
   // Load data
-  double ns_in, v_in;
+  double v_in;
   fp = fopen(fname, "r");
   if (fp != NULL) {
     for (int i = 0; i < n_lines; i++) {
@@ -872,7 +872,7 @@ double* LoadTabVelocity(char *fname)
       // velocity file is only an input. If it wasn't the case, this could
       // trigger some segfault.
       fgets(sline, 512, fp);
-      sscanf(sline, "%ld %lf\n", &ns_in, &v_in);
+      sscanf(sline, "%lf\n", &v_in);
       v[i] = v_in;
     }
     fclose(fp);

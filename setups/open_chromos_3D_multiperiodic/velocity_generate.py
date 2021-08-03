@@ -48,8 +48,7 @@ if __name__ == '__main__':
     t_sec = t_ns * dt * pluto_units.time.to('s')
 
     # Save data
-    dat = np.array([t_ns, v]).T
-    np.savetxt(f'{output_dir}/v.txt', dat, fmt='%d %.18e')
+    np.savetxt(f'{output_dir}/v.txt', v)
 
 
     # Compute PSD of generated time series
