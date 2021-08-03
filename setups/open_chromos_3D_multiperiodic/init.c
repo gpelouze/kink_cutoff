@@ -952,6 +952,17 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
     tab_vnew = LoadTabVelocity("driver_v/v.txt", &n_vnew);
     tab_xnew = IntegrateVelocity(tab_vnew, n_vnew);
     MPI_Barrier(MPI_COMM_WORLD);
+    #if DEBUG == TRUE
+    FILE *fp;
+    if (prank == 0) {
+      fp = fopen("DEBUG_vnew_xnew.txt", "w");
+      for (int i = 0; i < n_vnew; i++) {
+        fprintf(fp, "%+.15e %+.15e\n", tab_vnew[i], tab_xnew[i]);
+      }
+      fclose(fp);
+      printf("done\n");
+    }
+    #endif
   }
   // velocity amplitude at current timestep
   vnew = tab_vnew[g_stepNumber];
