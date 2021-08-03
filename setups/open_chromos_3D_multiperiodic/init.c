@@ -831,11 +831,12 @@ double VelocityRewriteCoeff(double x_loop)
   return bv_layer;
 }
 
-double* LoadTabVelocity(char *fname)
+double* LoadTabVelocity(char *fname, int *n)
 /*!
  *  Load tabulated driver velocity
  *
  * \param [in] fname  the name of the input data file
+ * \param [out] n  number of velocity points returned
  *
  * \return Array containing the velocity at each timestep, normalized to its
  *         variance
@@ -847,11 +848,11 @@ double* LoadTabVelocity(char *fname)
   char sline[512];
 
   // Get number of lines
-  int n_lines = 0;
+  (*n) = 0;
   fp = fopen(fname, "r");
   if (fp != NULL) {
     while (fgets(sline, 512, fp)) {
-      n_lines += 1;
+      (*n) += 1;
     }
     fclose(fp);
   }
@@ -861,16 +862,16 @@ double* LoadTabVelocity(char *fname)
   }
 
   // Allocate memory
-  double *v = ARRAY_1D(n_lines, double);
+  double *v = ARRAY_1D((*n), double);
 
   // Load data
   double v_in;
   fp = fopen(fname, "r");
   if (fp != NULL) {
-    for (int i = 0; i < n_lines; i++) {
-      // I assume that n_lines won't change since counting them, because the
-      // velocity file is only an input. If it wasn't the case, this could
-      // trigger some segfault.
+    for (int i = 0; i < (*n); i++) {
+      // I assume that the number of lines (*n) won't change since counting
+      // them, because the velocity file is only an input. If it wasn't the
+      // case, this could trigger some segfault.
       fgets(sline, 512, fp);
       sscanf(sline, "%lf\n", &v_in);
       v[i] = v_in;
@@ -919,7 +920,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   // load data
   static double *tab_vel_v = NULL;
   if (tab_vel_v == NULL) {
-    tab_vel_v = LoadTabVelocity("driver_v/v.txt");
+    tab_vel_v = LoadTabVelocity("driver_v/v.txt", &n_vnew);
     MPI_Barrier(MPI_COMM_WORLD);
   }
   // velocity amplitude at current timestep
