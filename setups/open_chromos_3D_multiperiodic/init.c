@@ -831,13 +831,14 @@ double VelocityRewriteCoeff(double x_loop)
   return bv_layer;
 }
 
-void LoadTabVelocity(char *fname, double *t, double *v)
+double* LoadTabVelocity(char *fname)
 /*!
  *  Load tabulated driver velocity
  *
  * \param [in] fname  the name of the input data file
- * \param [out] t     pointer to the time coordinates
- * \param [out] v     pointer to the velocity values
+ *
+ * \return Array containing the velocity at each timestep, normalized to its
+ *         variance
  *
  *********************************************************************** */
 {
@@ -860,11 +861,10 @@ void LoadTabVelocity(char *fname, double *t, double *v)
   }
 
   // Allocate memory
-  t = ARRAY_1D(n_lines, double);
-  v = ARRAY_1D(n_lines, double);
+  double *v = ARRAY_1D(n_lines, double);
 
   // Load data
-  double t_in, v_in;
+  double ns_in, v_in;
   fp = fopen(fname, "r");
   if (fp != NULL) {
     for (int i = 0; i < n_lines; i++) {
@@ -872,8 +872,7 @@ void LoadTabVelocity(char *fname, double *t, double *v)
       // velocity file is only an input. If it wasn't the case, this could
       // trigger some segfault.
       fgets(sline, 512, fp);
-      sscanf(sline, "%lf %lf\n", &t_in, &v_in);
-      t[i] = t_in;
+      sscanf(sline, "%ld %lf\n", &ns_in, &v_in);
       v[i] = v_in;
     }
     fclose(fp);
@@ -883,15 +882,14 @@ void LoadTabVelocity(char *fname, double *t, double *v)
     QUIT_PLUTO(1);
   }
 
-  printf("%g\n", v[1830]);
+  return v;
 }
 
-double InterpTabVelocity(double t, double *t_data, double *v_data)
+double InterpTabVelocity(double t, double *v_data)
 /*!
  *  Interpolate tabulated driver velocity at a given time
  *
  * \param [in] t       time at which to interpolate the velocity
- * \param [in] t_data  pointer to the time coordinates
  * \param [in] v_data  pointer to the velocity values
  *
  * \return the velocity at time t
@@ -931,14 +929,10 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   double radius = g_inputParam[STEP_R];
 
   // load tabulated data
-  static int tab_vel_is_loaded = NO;
-  static double *tab_vel_t, *tab_vel_v;
-  if (tab_vel_is_loaded != YES) {
-    printf("Loading velocity\n");
-    LoadTabVelocity("velocity.dat", tab_vel_t, tab_vel_v);
+  static double *tab_vel_v = NULL;
+  if (tab_vel_v == NULL) {
+    tab_vel_v = LoadTabVelocity("driver_v/v.txt");
     MPI_Barrier(MPI_COMM_WORLD);
-    // printf("%g\n", tab_vel_v[1830]);
-    tab_vel_is_loaded = YES;
   }
 
   x1 = grid->x[IDIR];
@@ -963,8 +957,8 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
         #endif
 
         // Velocity (driver)
-        vnew = InterpTabVelocity(g_time, tab_vel_t, tab_vel_v);
-        x1new = x1[i];
+        vnew = InterpTabVelocity(g_time, tab_vel_v);
+        x1new = x1[i];  // + coordinate change
         x2new = x2[j];
         profile = 0.5 * (1 - tanh(((sqrt(pow(x1new, 2) + pow(x2new, 2)) / radius) - 1 ) * g_inputParam[STEP_b]));
         profile1 = pow(radius, 2) * (pow(x1new, 2) - pow(x2new, 2)) / pow(pow(x1new, 2) + pow(x2new, 2), 2);
