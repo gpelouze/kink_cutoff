@@ -888,6 +888,30 @@ double* LoadTabVelocity(char *fname, int *n)
   }
 
   return v;
+
+}
+
+double* IntegrateVelocity(double *v, int n)
+/*!
+ *  Integrate driver velocity array to get the displacement of the loop center.
+ *
+ * \param [in] v  pointer to the velocity values at each timestep
+ * \param [in] n  number of points in v
+ *
+ * \return  pointer to the loop center displacement at each time step
+ *
+ *********************************************************************** */
+{
+  double *x = ARRAY_1D(n, double);
+
+  x[0] = 0.;
+  for (int i = 1; i < n; i++) {
+    // Crank-Nicolson scheme
+    x[i] = x[i-1] + .5 * (v[i] + v[i-1]) * g_dt;
+  }
+
+  return x;
+
 }
 
 /* ********************************************************************* */
@@ -915,20 +939,24 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 {
   int   i, j, k;
   double  *x1, *x2, *x3;
-  double vnew, x1new, x2new, profile, profile1, profile2, Temp, strat;
+  double vnew, xnew, x1new, x2new, profile, profile1, profile2, Temp, strat;
 
   double radius = g_inputParam[STEP_R];
 
   // Setup broadband driver
   // load data
   static double *tab_vnew = NULL;
+  static double *tab_xnew = NULL;
   static int n_vnew;
   if (tab_vnew == NULL) {
     tab_vnew = LoadTabVelocity("driver_v/v.txt", &n_vnew);
+    tab_xnew = IntegrateVelocity(tab_vnew, n_vnew);
     MPI_Barrier(MPI_COMM_WORLD);
   }
   // velocity amplitude at current timestep
   vnew = tab_vnew[g_stepNumber];
+  // loop center displacement at current timestep
+  xnew = tab_xnew[g_stepNumber];
 
 
   x1 = grid->x[IDIR];
@@ -953,7 +981,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
         #endif
 
         // Velocity (driver)
-        x1new = x1[i];  // + coordinate change
+        x1new = x1[i] - xnew;
         x2new = x2[j];
         profile = 0.5 * (1 - tanh(((sqrt(pow(x1new, 2) + pow(x2new, 2)) / radius) - 1 ) * g_inputParam[STEP_b]));
         profile1 = pow(radius, 2) * (pow(x1new, 2) - pow(x2new, 2)) / pow(pow(x1new, 2) + pow(x2new, 2), 2);
