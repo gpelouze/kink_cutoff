@@ -885,20 +885,6 @@ double* LoadTabVelocity(char *fname)
   return v;
 }
 
-double InterpTabVelocity(double t, double *v_data)
-/*!
- *  Interpolate tabulated driver velocity at a given time
- *
- * \param [in] t       time at which to interpolate the velocity
- * \param [in] v_data  pointer to the velocity values
- *
- * \return the velocity at time t
- *
- *********************************************************************** */
-{
-  return 0.;
-}
-
 /* ********************************************************************* */
 void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 /*!
@@ -927,13 +913,17 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   double vnew, x1new, x2new, profile, profile1, profile2, Temp, strat;
 
   double radius = g_inputParam[STEP_R];
+  double v0_driver = g_inputParam[DRIVER_v0] / UNIT_VELOCITY;
 
-  // load tabulated data
+  // Setup broadband driver
+  // load data
   static double *tab_vel_v = NULL;
   if (tab_vel_v == NULL) {
     tab_vel_v = LoadTabVelocity("driver_v/v.txt");
     MPI_Barrier(MPI_COMM_WORLD);
   }
+  // velocity amplitude at current timestep
+  vnew = v0_driver * tab_vel_v[g_stepNumber];
 
   x1 = grid->x[IDIR];
   x2 = grid->x[JDIR];
@@ -957,7 +947,6 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
         #endif
 
         // Velocity (driver)
-        vnew = InterpTabVelocity(g_time, tab_vel_v);
         x1new = x1[i];  // + coordinate change
         x2new = x2[j];
         profile = 0.5 * (1 - tanh(((sqrt(pow(x1new, 2) + pow(x2new, 2)) / radius) - 1 ) * g_inputParam[STEP_b]));
