@@ -918,13 +918,15 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 
   // Setup broadband driver
   // load data
-  static double *tab_vel_v = NULL;
-  if (tab_vel_v == NULL) {
-    tab_vel_v = LoadTabVelocity("driver_v/v.txt", &n_vnew);
+  static double *tab_vnew = NULL;
+  static int n_vnew;
+  if (tab_vnew == NULL) {
+    tab_vnew = LoadTabVelocity("driver_v/v.txt", &n_vnew);
     MPI_Barrier(MPI_COMM_WORLD);
   }
   // velocity amplitude at current timestep
-  vnew = v0_driver * tab_vel_v[g_stepNumber];
+  vnew = v0_driver * tab_vnew[g_stepNumber];
+
 
   x1 = grid->x[IDIR];
   x2 = grid->x[JDIR];
