@@ -960,7 +960,6 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
         fprintf(fp, "%+.15e %+.15e\n", tab_vnew[i], tab_xnew[i]);
       }
       fclose(fp);
-      printf("done\n");
     }
     #endif
   }
