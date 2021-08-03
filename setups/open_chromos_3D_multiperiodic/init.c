@@ -838,8 +838,7 @@ double* LoadTabVelocity(char *fname, int *n)
  * \param [in] fname  the name of the input data file
  * \param [out] n  number of velocity points returned
  *
- * \return Array containing the velocity at each timestep, normalized to its
- *         variance
+ * \return  pointer to the velocity values at each time step
  *
  *********************************************************************** */
 {
@@ -864,6 +863,11 @@ double* LoadTabVelocity(char *fname, int *n)
   // Allocate memory
   double *v = ARRAY_1D((*n), double);
 
+  // Velocity normalisation: convert the values read from fname (normalized to
+  // their variance), into code units with a variance of DRIVER_v0, read from
+  // the  ini file.
+  double v0_driver = g_inputParam[DRIVER_v0] / UNIT_VELOCITY;
+
   // Load data
   double v_in;
   fp = fopen(fname, "r");
@@ -874,7 +878,7 @@ double* LoadTabVelocity(char *fname, int *n)
       // case, this could trigger some segfault.
       fgets(sline, 512, fp);
       sscanf(sline, "%lf\n", &v_in);
-      v[i] = v_in;
+      v[i] = v_in * v0_driver;
     }
     fclose(fp);
   }
@@ -914,7 +918,6 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   double vnew, x1new, x2new, profile, profile1, profile2, Temp, strat;
 
   double radius = g_inputParam[STEP_R];
-  double v0_driver = g_inputParam[DRIVER_v0] / UNIT_VELOCITY;
 
   // Setup broadband driver
   // load data
@@ -925,7 +928,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
     MPI_Barrier(MPI_COMM_WORLD);
   }
   // velocity amplitude at current timestep
-  vnew = v0_driver * tab_vnew[g_stepNumber];
+  vnew = tab_vnew[g_stepNumber];
 
 
   x1 = grid->x[IDIR];
