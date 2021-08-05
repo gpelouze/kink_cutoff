@@ -61,10 +61,12 @@ if __name__ == '__main__':
     f_ns = f_ns[1:]
     f_sec = f_sec[1:]
 
-    def fit_func(f, A):
-        return A*f**-args.beta
-    popt, pcov = sopt.curve_fit(fit_func, f_ns, psd, p0=[1000])
-    psd_fit = fit_func(f_ns, *popt)
+    def fit_func(f, A, b):
+        return np.log(A*f**(-b))
+    popt, pcov = sopt.curve_fit(fit_func, f_ns, np.log(psd))
+    psd_fit = np.exp(fit_func(f_ns, *popt))
+    fit_label = 'Fit PSD = {:.2g} $\\nu^{{-{:.4g}}}$'.format(*popt)
+    print(fit_label)
 
     # Plot data
     plt.figure(0, clear=True)
@@ -74,8 +76,8 @@ if __name__ == '__main__':
     plt.savefig(f'{output_dir}/plot_v.pdf')
 
     plt.figure(1, clear=True)
-    plt.plot(f_sec.to('Hz'), psd, label='PSD')
-    plt.plot(f_sec.to('Hz'), psd_fit, label='fit PSD')
+    plt.step(f_sec.to('Hz'), psd, label='PSD', where='mid')
+    plt.plot(f_sec.to('Hz'), psd_fit, label=fit_label)
     plt.legend()
     plt.loglog()
     plt.grid(True)
