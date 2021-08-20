@@ -915,7 +915,7 @@ double* IntegrateVelocity(double **tv, int n)
 
 }
 
-double* ComputeDriverStep(double **tab_tvnew, double *tab_xnew, double *vnew, double *xnew)
+void ComputeDriverStep(double **tab_tvnew, double *tab_xnew, double *vnew, double *xnew)
 /*!
  *  Compute the driver amplitude and velocity amplitude at the given step
  * \param [in] tab_tvnew  pointer to the time and velocity at each timestep
