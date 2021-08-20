@@ -943,6 +943,7 @@ void ComputeDriverStep(double **tab_tvnew, double *tab_xnew, double *vnew, doubl
     (*xnew) = tab_xnew[i];
   }
   else {
+    // interpolation
     (*vnew) = LinearInterpolation(g_time, tab_tvnew[i-1][0], tab_tvnew[i][0], tab_tvnew[i-1][1], tab_tvnew[i][1]);
     (*xnew) = LinearInterpolation(g_time, tab_tvnew[i-1][0], tab_tvnew[i][0], tab_xnew[i-1], tab_xnew[i]);
     // printf("%ld -> %d\n", g_stepNumber, i);
