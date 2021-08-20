@@ -48,7 +48,7 @@
 #define  H_MASS_FRAC                    1.0
 #define  He_MASS_FRAC                   0.0
 #define  INTERNAL_BOUNDARY              YES
-#define  DEBUG                          YES
+#define  DEBUG                          NO
 
 /* user-defined code configuration labels (options) */
 #define  CH_OUTFLOW                     0
