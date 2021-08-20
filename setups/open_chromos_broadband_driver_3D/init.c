@@ -946,6 +946,11 @@ void ComputeDriverStep(double **tab_tvnew, double *tab_xnew, double *vnew, doubl
     // interpolation
     (*vnew) = LinearInterpolation(g_time, tab_tvnew[i-1][0], tab_tvnew[i][0], tab_tvnew[i-1][1], tab_tvnew[i][1]);
     (*xnew) = LinearInterpolation(g_time, tab_tvnew[i-1][0], tab_tvnew[i][0], tab_xnew[i-1], tab_xnew[i]);
+    // verification
+    double driver_dt = tab_tvnew[i][0] - tab_tvnew[i-1][0];
+    if (g_dt < driver_dt) {
+      print("! step:%ld WARNING: simulation dt (%g) is smaller than driver dt (%g)\n", g_stepNumber, g_dt, driver_dt);
+    }
     // printf("%ld -> %d\n", g_stepNumber, i);
     // printf("  %.12f  %+.12f  %+.12f\n", tab_tvnew[i-1][0], tab_tvnew[i-1][1], tab_xnew[i-1]);
     // printf("  %.12f  %+.12f  %+.12f\n", g_time, *vnew, *xnew);
