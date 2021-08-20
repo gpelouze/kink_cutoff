@@ -915,6 +915,15 @@ double* IntegrateVelocity(double **tv, int n)
 
 }
 
+double LinearInterpolation(double t, double t_prev, double t_next, double val_prev, double val_next)
+/*!
+ *  Linear inteprolation between two points
+ *********************************************************************** */
+{
+  double val = val_prev + (val_next - val_prev) / (t_next - t_prev) * (t - t_prev);
+  return val;
+}
+
 void ComputeDriverStep(double **tab_tvnew, double *tab_xnew, double *vnew, double *xnew)
 /*!
  *  Compute the driver amplitude and velocity amplitude at the given step
@@ -924,8 +933,24 @@ void ComputeDriverStep(double **tab_tvnew, double *tab_xnew, double *vnew, doubl
  * \param [out] xnew      loop center displacement at the current timestep
  *********************************************************************** */
 {
-  (*vnew) = tab_tvnew[g_stepNumber][1];
-  (*xnew) = tab_xnew[g_stepNumber];
+  // Get driver points before and after the current timestep
+  long int i = 0;
+  while ( tab_tvnew[i][0] < g_time ) {
+    i++;
+  }
+  if (i == 0) {
+    (*vnew) = tab_tvnew[i][1];
+    (*xnew) = tab_xnew[i];
+  }
+  else {
+    (*vnew) = LinearInterpolation(g_time, tab_tvnew[i-1][0], tab_tvnew[i][0], tab_tvnew[i-1][1], tab_tvnew[i][1]);
+    (*xnew) = LinearInterpolation(g_time, tab_tvnew[i-1][0], tab_tvnew[i][0], tab_xnew[i-1], tab_xnew[i]);
+    // printf("%ld -> %d\n", g_stepNumber, i);
+    // printf("  %.12f  %+.12f  %+.12f\n", tab_tvnew[i-1][0], tab_tvnew[i-1][1], tab_xnew[i-1]);
+    // printf("  %.12f  %+.12f  %+.12f\n", g_time, *vnew, *xnew);
+    // printf("  %.12f  %+.12f  %+.12f\n", tab_tvnew[i][0], tab_tvnew[i][1], tab_xnew[i]);
+  }
+
 }
 
 /* ********************************************************************* */
