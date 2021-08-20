@@ -977,8 +977,6 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
     }
     #endif
   }
-  ComputeDriverStep(tab_tvnew, tab_xnew, &vnew, &xnew);
-
 
   x1 = grid->x[IDIR];
   x2 = grid->x[JDIR];
@@ -987,6 +985,9 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
   /* Lower boundary */
   if (side == X3_END){
     if (box->vpos == CENTER) {
+
+      ComputeDriverStep(tab_tvnew, tab_xnew, &vnew, &xnew);
+
       BOX_LOOP(box,k,j,i){
 
         // Temperature and pressure
