@@ -28,13 +28,6 @@ if __name__ == '__main__':
     pluto_ini = ppp.PlutoIni(args.ini_dir)
     pluto_units = ppp.PlutoUnitsAstropy(args.ini_dir)
 
-    # Verify that PLUTO is configured to run with a fixed time step
-    CFL_max_var = float(pluto_ini['Time']['CFL_max_var'])
-    if CFL_max_var != 1:
-        msg = (f'simulations must have a fixed time step'
-               f' (got CFL_max_var = {CFL_max_var} instead of 1.)')
-        raise ValueError(msg)
-
     # Determine number of timestep
     tstop = float(pluto_ini['Time']['tstop'])
     dt = float(pluto_ini['Time']['first_dt'])
