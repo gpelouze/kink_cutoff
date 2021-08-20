@@ -46,10 +46,11 @@ if __name__ == '__main__':
     # Generate time arrays, in number of time steps (_ns), and seconds (_sec)
     t_ns = np.arange(Ns_max)
     t_sec = t_ns * dt * pluto_units.time.to('s')
+    t_t0 = t_ns * dt
 
     # Save data
-    np.savetxt(f'{output_dir}/v.txt', v)
-
+    dat = np.stack([t_t0, v]).T
+    np.savetxt(f'{output_dir}/v.txt', dat)
 
     # Compute PSD of generated time series
     psd = np.abs(np.fft.rfft(v) / np.sqrt(v.size))**2

@@ -831,14 +831,14 @@ double VelocityRewriteCoeff(double x_loop)
   return bv_layer;
 }
 
-double* LoadTabVelocity(char *fname, int *n)
+double** LoadTabVelocity(char *fname, int *n)
 /*!
  *  Load tabulated driver velocity
  *
  * \param [in] fname  the name of the input data file
  * \param [out] n  number of velocity points returned
  *
- * \return  pointer to the velocity values at each time step
+ * \return  pointer to the time and velocity values at each time step
  *
  *********************************************************************** */
 {
@@ -861,7 +861,7 @@ double* LoadTabVelocity(char *fname, int *n)
   }
 
   // Allocate memory
-  double *v = ARRAY_1D((*n), double);
+  double **tv = ARRAY_2D((*n), 2, double);
 
   // Velocity normalisation: convert the values read from fname (normalized to
   // their variance), into code units with a variance of DRIVER_v0, read from
@@ -869,7 +869,7 @@ double* LoadTabVelocity(char *fname, int *n)
   double v0_driver = g_inputParam[DRIVER_v0] / UNIT_VELOCITY;
 
   // Load data
-  double v_in;
+  double t_in, v_in;
   fp = fopen(fname, "r");
   if (fp != NULL) {
     for (int i = 0; i < (*n); i++) {
@@ -877,8 +877,9 @@ double* LoadTabVelocity(char *fname, int *n)
       // them, because the velocity file is only an input. If it wasn't the
       // case, this could trigger some segfault.
       fgets(sline, 512, fp);
-      sscanf(sline, "%lf\n", &v_in);
-      v[i] = v_in * v0_driver;
+      sscanf(sline, "%lf %lf\n", &t_in, &v_in);
+      tv[i][0] = t_in;  // t0
+      tv[i][1] = v_in * v0_driver;  // v0
     }
     fclose(fp);
   }
@@ -887,16 +888,16 @@ double* LoadTabVelocity(char *fname, int *n)
     QUIT_PLUTO(1);
   }
 
-  return v;
+  return tv;
 
 }
 
-double* IntegrateVelocity(double *v, int n)
+double* IntegrateVelocity(double **tv, int n)
 /*!
  *  Integrate driver velocity array to get the displacement of the loop center.
  *
- * \param [in] v  pointer to the velocity values at each timestep
- * \param [in] n  number of points in v
+ * \param [in] tv pointer to the time and velocity values at each timestep
+ * \param [in] n  number of points in tv
  *
  * \return  pointer to the loop center displacement at each time step
  *
@@ -907,7 +908,7 @@ double* IntegrateVelocity(double *v, int n)
   x[0] = 0.;
   for (int i = 1; i < n; i++) {
     // Crank-Nicolson scheme
-    x[i] = x[i-1] + .5 * (v[i] + v[i-1]) * g_dt;
+    x[i] = x[i-1] + .5 * (tv[i][1] + tv[i-1][1]) * g_dt;
   }
 
   return x;
@@ -945,26 +946,26 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 
   // Setup broadband driver
   // load data
-  static double *tab_vnew = NULL;
+  static double **tab_tvnew = NULL;
   static double *tab_xnew = NULL;
   static int n_vnew;
-  if (tab_vnew == NULL) {
-    tab_vnew = LoadTabVelocity("driver_v/v.txt", &n_vnew);
-    tab_xnew = IntegrateVelocity(tab_vnew, n_vnew);
+  if (tab_tvnew == NULL) {
+    tab_tvnew = LoadTabVelocity("driver_v/v.txt", &n_vnew);
+    tab_xnew = IntegrateVelocity(tab_tvnew, n_vnew);
     MPI_Barrier(MPI_COMM_WORLD);
     #if DEBUG == TRUE
     FILE *fp;
     if (prank == 0) {
       fp = fopen("DEBUG_vnew_xnew.txt", "w");
       for (int i = 0; i < n_vnew; i++) {
-        fprintf(fp, "%+.15e %+.15e\n", tab_vnew[i], tab_xnew[i]);
+        fprintf(fp, "%+.15e %+.15e\n", tab_tvnew[i][1], tab_xnew[i]);
       }
       fclose(fp);
     }
     #endif
   }
   // velocity amplitude at current timestep
-  vnew = tab_vnew[g_stepNumber];
+  vnew = tab_tvnew[g_stepNumber][1];
   // loop center displacement at current timestep
   xnew = tab_xnew[g_stepNumber];
 
