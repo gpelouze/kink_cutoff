@@ -915,6 +915,19 @@ double* IntegrateVelocity(double **tv, int n)
 
 }
 
+double* ComputeDriverStep(double **tab_tvnew, double *tab_xnew, double *vnew, double *xnew)
+/*!
+ *  Compute the driver amplitude and velocity amplitude at the given step
+ * \param [in] tab_tvnew  pointer to the time and velocity at each timestep
+ * \param [in] tab_xnew   pointer to the loop center displacement at each timestep
+ * \param [out] vnew      velocity amplitude at the current timestep
+ * \param [out] xnew      loop center displacement at the current timestep
+ *********************************************************************** */
+{
+  (*vnew) = tab_tvnew[g_stepNumber][1];
+  (*xnew) = tab_xnew[g_stepNumber];
+}
+
 /* ********************************************************************* */
 void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
 /*!
@@ -964,10 +977,7 @@ void UserDefBoundary (const Data *d, RBox *box, int side, Grid *grid)
     }
     #endif
   }
-  // velocity amplitude at current timestep
-  vnew = tab_tvnew[g_stepNumber][1];
-  // loop center displacement at current timestep
-  xnew = tab_xnew[g_stepNumber];
+  ComputeDriverStep(tab_tvnew, tab_xnew, &vnew, &xnew);
 
 
   x1 = grid->x[IDIR];
