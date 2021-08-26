@@ -14,4 +14,21 @@ cd $PBS_O_WORKDIR
 n_proc=$(cat $PBS_NODEFILE | wc -l)
 n_node=$(cat $PBS_NODEFILE | uniq | wc -l)
 
-mpirun -n $n_proc pluto
+function pluto_is_done() {
+    grep -P "^> Done$" log/pluto.0.log > /dev/null 2>&1
+    return $?
+}
+
+until pluto_is_done
+do
+    if [ -f output/dbl.out ]
+    then
+        nfile_last=$(tail -n1 output/dbl.out | cut -d" " -f1)
+        restart_flag="-restart $nfile_last"
+    fi
+    echo mpirun -n $n_proc pluto $restart_flag
+    mpirun -n $n_proc pluto $restart_flag
+    sleep 5
+done
+
+echo "Done"
