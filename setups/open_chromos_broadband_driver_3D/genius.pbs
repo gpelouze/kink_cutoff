@@ -1,8 +1,8 @@
 #!/bin/bash -l
 
-#PBS -N twikh_3D_
+#PBS -N twikhi_bb
 #PBS -l nodes=16:ppn=36
-#PBS -l walltime=26:00:00
+#PBS -l walltime=72:00:00
 #PBS -A lp_bosswaves
 #PBS -m ea
 #PBS -M gabriel.pelouze@kuleuven.be
