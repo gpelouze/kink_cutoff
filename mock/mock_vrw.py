@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+Generate velocity rewrite layer parameter using original formulation
+
+$\alpha_v(t, z) = \alpha_{v,f}(t) + \alpha_{v,l}(t) \beta_{v,l}(z)$
+"""
+
 import argparse
 
 import etframes
@@ -22,6 +28,7 @@ if __name__ == '__main__':
     # mock parameters
     p.add_argument('--Nt', type=int, default=500)
     p.add_argument('--Nx', type=int, default=200)
+    p.add_argument('--split-norm', action='store_true')
     p.add_argument('--plot-symbolic', action='store_true')
     args = p.parse_args()
 
@@ -109,19 +116,29 @@ if __name__ == '__main__':
         del x_ticks[1]
         del x_ticklabels[1]
 
+    a, b = sorted([av_layer_min, av_fulldom_min])
+    if (b < 1) and args.split_norm:
+        norm_plot = plt.matplotlib.colors.TwoSlopeNorm(
+            vmin=0, vcenter=b, vmax=1)
+        norm_imshow = plt.matplotlib.colors.TwoSlopeNorm(
+            vmin=a, vcenter=b, vmax=1)
+    else:
+        norm_plot = plt.matplotlib.colors.Normalize(vmin=0, vmax=1)
+        norm_imshow = plt.matplotlib.colors.Normalize(vmin=a, vmax=1)
+
     av_fulldom_plot = papy.num.almost_identical(av_fulldom, 1e-10, axis=1)
     av_layer_plot = papy.num.almost_identical(av_layer, 1e-10, axis=1)
     plt.figure(clear=True, constrained_layout=False)
     plt.plot(
         all_time,
-        av_layer_plot,
+        norm_plot(av_layer_plot),
         '--',
         color='#008B72',
         label='$\\alpha_{v,l}$',
         )
     plt.plot(
         all_time,
-        av_fulldom_plot,
+        norm_plot(av_fulldom_plot),
         '-',
         color='#ddaa33',
         label='$\\alpha_{v,f}$',
@@ -136,7 +153,7 @@ if __name__ == '__main__':
     plt.ylabel('$\\alpha_v$')
     etframes.add_range_frame()
     plt.yticks(
-        ticks=(0, av_fulldom_min, 1),
+        ticks=(0, norm_plot(av_fulldom_min), 1),
         labels=('0',
                 ('$\\alpha_{v,f,\\mathrm{min}}$' if args.plot_symbolic
                  else f'{av_fulldom_min:g}'),
@@ -178,6 +195,7 @@ if __name__ == '__main__':
         coordinates=[all_time, x],
         aspect=(all_time.ptp() / x.ptp()),
         cmap='gray',
+        norm=norm_imshow,
         )
 
     if 1 in dt_nonzero:
@@ -188,7 +206,7 @@ if __name__ == '__main__':
     if t2 < args.tstop:
         plt.text(t2+(args.tstop-t2)/2,
                  x_max_layer + (args.L-x_max_layer)/2,
-                 f'1.0',
+                 f'{1:g}',
                  bbox=dict(facecolor='white', edgecolor='black'),
                  ha='center', va='center')
         plt.text(t2+(args.tstop-t2)/2, 0,
@@ -202,9 +220,8 @@ if __name__ == '__main__':
     plt.ylabel('Position along the loop')
     plt.xticks(ticks=t_ticks, labels=t_ticklabels)
     plt.yticks(ticks=x_ticks, labels=x_ticklabels)
-    cb.set_ticks((0, av_layer_min, av_fulldom_min, 1))
+    cb.set_ticks((av_layer_min, av_fulldom_min, 1))
     cb.set_ticklabels((
-        '0',
         ('$\\alpha_{v,l,\\mathrm{min}}$' if args.plot_symbolic
          else av_layer_min),
         ('$\\alpha_{v,f,\\mathrm{min}}$' if args.plot_symbolic
