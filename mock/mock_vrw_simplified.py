@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
 """
-Generate velocity rewrite layer parameter using original formulation
+Generate velocity rewrite layer parameter using simplified formulation used
+in PelouzeEtAl2023:
 
-$\alpha_v(t, z) = \alpha_{v,f}(t) + \alpha_{v,l}(t) \beta_{v,l}(z)$
+$\alpha_v(t, z) = 1 - \beta_v(z) \gamma_v(t)$
+
+This formulation is equivalent to the one in `mock_vrw_general.py` when
+$\alpha_{v,f,\mathrm{min}} = 1$.
 """
 
 import argparse
@@ -21,8 +25,7 @@ if __name__ == '__main__':
     p.add_argument('tstop', type=float)
     p.add_argument('--dt1', type=float, default=0)
     p.add_argument('--dt2', type=float, default=0)
-    p.add_argument('--avfmin', type=float, default=0.9)
-    p.add_argument('--avlmin', type=float, default=0.8)
+    p.add_argument('--avmin', type=float, default=0.8)
     p.add_argument('--xmaxl', type=float, default=50.)
     p.add_argument('--L', type=float, default=100)
     # mock parameters
@@ -37,16 +40,15 @@ if __name__ == '__main__':
 
     dt1 = args.dt1
     dt2 = args.dt2
-    av_fulldom_min = args.avfmin
-    av_layer_min = args.avlmin
+    av_min = args.avmin
     x_max_layer = args.xmaxl
+    domain_length = args.L
 
     # mock
 
     av = np.full((args.Nt, args.Nx), np.nan)
-    av_fulldom = av.copy()
-    av_layer = av.copy()
-    bv_layer = av.copy()
+    bv = av.copy()
+    cv = av.copy()
 
     t1 = dt1
     t2 = t1 + dt2
@@ -55,32 +57,25 @@ if __name__ == '__main__':
 
         for ix, _ in enumerate(x):
 
-            # alpha_fulldom
-            if g_time <= t1:
-                av_fulldom[it, ix] = av_fulldom_min
-            elif g_time <= t2:
-                av_fulldom[it, ix] = av_fulldom_min - (g_time - t1) * av_fulldom_min / dt2
-            else:
-                av_fulldom[it, ix] = 0.
-
-            # alpha_layer
-            if g_time <= t1:
-                av_layer[it, ix] = 0.
-            elif g_time <= t2:
-                av_layer[it, ix] = 1. + (g_time - t2) / dt2
-            else:
-                av_layer[it, ix] = 1.
-
-            # beta_layer
+            # beta_v,l
             if x[ix] < x_max_layer:
-                bv_layer[it, ix] = (
-                    av_layer_min +
-                    (1 - av_layer_min) / x_max_layer * x[ix]
+                bv[it, ix] = (
+                    (1 - av_min) *
+                    (domain_length - x_max_layer - x[ix]) /
+                    (domain_length - x_max_layer)
                     )
             else:
-                bv_layer[it, ix] = 1.
+                bv[it, ix] = 0.
 
-    av = av_fulldom + av_layer*bv_layer
+            # gamma_v,l
+            if g_time <= t1:
+                cv[it, ix] = 0.
+            elif g_time <= t2:
+                cv[it, ix] = (g_time - t1) / dt2
+            else:
+                cv[it, ix] = 1.
+
+    av = 1 - bv * cv
     assert np.all(av <= 1.)
 
     # plot result
@@ -116,77 +111,55 @@ if __name__ == '__main__':
         del x_ticks[1]
         del x_ticklabels[1]
 
-    a, b = sorted([av_layer_min, av_fulldom_min])
-    if (b < 1) and args.split_norm:
-        norm_plot = plt.matplotlib.colors.TwoSlopeNorm(
-            vmin=0, vcenter=b, vmax=1)
-        norm_imshow = plt.matplotlib.colors.TwoSlopeNorm(
-            vmin=a, vcenter=b, vmax=1)
-    else:
-        norm_plot = plt.matplotlib.colors.Normalize(vmin=0, vmax=1)
-        norm_imshow = plt.matplotlib.colors.Normalize(vmin=a, vmax=1)
+    norm_imshow = plt.matplotlib.colors.Normalize(
+        vmin=av_min, vmax=1)
 
-    av_fulldom_plot = papy.num.almost_identical(av_fulldom, 1e-10, axis=1)
-    av_layer_plot = papy.num.almost_identical(av_layer, 1e-10, axis=1)
+    cv_plot = papy.num.almost_identical(cv, 1e-10, axis=1)
     plt.figure(clear=True, constrained_layout=False)
     plt.plot(
         all_time,
-        norm_plot(av_layer_plot),
-        '--',
-        color='#008B72',
-        label='$\\alpha_{v,l}$',
-        )
-    plt.plot(
-        all_time,
-        norm_plot(av_fulldom_plot),
+        cv_plot,
         '-',
         color='#ddaa33',
-        label='$\\alpha_{v,f}$',
         )
     for i, t in t_nonzero.items():
         if t > 0:
             plt.plot([t, t], [0, 1], color='k', alpha=.2)
         if args.plot_symbolic:
             plt.text(t-dt[i]/2, -0.075, f'$\\mathrm{{d}}t_{i}$', ha='center', va='top', color='gray')
-    plt.legend(frameon=False)
     plt.xlabel('Time')
-    plt.ylabel('$\\alpha_v$')
+    plt.ylabel('$\\gamma_v$')
     etframes.add_range_frame()
     plt.yticks(
-        ticks=(0, norm_plot(av_fulldom_min), 1),
-        labels=('0',
-                ('$\\alpha_{v,f,\\mathrm{min}}$' if args.plot_symbolic
-                 else f'{av_fulldom_min:g}'),
-                1),
+        ticks=(0, 1),
         )
     plt.xticks(ticks=t_ticks, labels=t_ticklabels)
     plt.tight_layout()
-    plt.savefig('data/mock_vrw_alpha.pdf')
+    plt.savefig('data/new_mock_vrw_gamma.pdf')
 
-    bv_layer_plot = papy.num.almost_identical(bv_layer, 1e-10, axis=0)
+    bv_plot = papy.num.almost_identical(bv, 1e-10, axis=0)
     plt.figure(clear=True, constrained_layout=False)
     plt.plot(
         x,
-        bv_layer_plot,
+        bv_plot,
         '--',
         color='#008B72',
-        label='$\\beta_{v,l}$',
         )
-    plt.plot([x_max_layer, x_max_layer], [av_layer_min, 1], color='k', alpha=.2)
+    plt.plot([x_max_layer, x_max_layer], [0, 1 - av_min], color='k', alpha=.2)
     plt.xlabel('Position along the loop')
     plt.ylabel('$\\beta_v$')
     etframes.add_range_frame()
     plt.yticks(
-        ticks=(av_layer_min, 1),
+        ticks=(0, 1 - av_min),
         labels=(
-            ('$\\alpha_{v,l,\\mathrm{min}}$' if args.plot_symbolic
-             else av_layer_min),
-            1,
+            0,
+            ('$1 - \\alpha_{v,\\mathrm{min}}$' if args.plot_symbolic
+             else f'{1 - av_min:g}'),
             ),
         )
     plt.xticks(ticks=x_ticks_all, labels=x_ticklabels_all)
     plt.tight_layout()
-    plt.savefig('data/mock_vrw_beta.pdf')
+    plt.savefig('data/new_mock_vrw_beta.pdf')
 
     plt.figure(clear=True, constrained_layout=False)
     m = papy.plot.plot_map(
@@ -200,7 +173,7 @@ if __name__ == '__main__':
 
     if 1 in dt_nonzero:
         plt.text(t1-dt1/2, args.L/2,
-                 f'{av_fulldom_min:g}',
+                 f'{1:g}',
                  bbox=dict(facecolor='white', edgecolor='black'),
                  ha='center', va='center')
     if t2 < args.tstop:
@@ -209,8 +182,8 @@ if __name__ == '__main__':
                  f'{1:g}',
                  bbox=dict(facecolor='white', edgecolor='black'),
                  ha='center', va='center')
-        plt.text(t2+(args.tstop-t2)/2, 0,
-                 f'{av_layer_min:g}',
+        plt.text(t2 + (args.tstop-t2) / 2, 0,
+                 f'{av_min:g}',
                  color='black',
                  bbox=dict(facecolor='white', edgecolor='black'),
                  ha='center', va='bottom')
@@ -220,12 +193,10 @@ if __name__ == '__main__':
     plt.ylabel('Position along the loop')
     plt.xticks(ticks=t_ticks, labels=t_ticklabels)
     plt.yticks(ticks=x_ticks, labels=x_ticklabels)
-    cb.set_ticks((av_layer_min, av_fulldom_min, 1))
+    cb.set_ticks((av_min, 1))
     cb.set_ticklabels((
-        ('$\\alpha_{v,l,\\mathrm{min}}$' if args.plot_symbolic
-         else av_layer_min),
-        ('$\\alpha_{v,f,\\mathrm{min}}$' if args.plot_symbolic
-         else av_fulldom_min),
+        ('$\\alpha_{v,\\mathrm{min}}$' if args.plot_symbolic
+         else av_min),
         1))
     plt.tight_layout()
-    plt.savefig('data/mock_vrw_av.pdf')
+    plt.savefig('data/new_mock_vrw_av.pdf')
