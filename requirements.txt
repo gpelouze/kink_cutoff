@@ -1,0 +1,12 @@
+# Minimal requirements for running setup
+Jinja2==3.1.2
+PyYAML==6.0
+numpy==1.23.3
+scipy==1.9.1
+pyPLUTOplus @ git+https://github.com/gpelouze/pyPLUTOplus@2021.7.29
+
+# Extra requirements for viz
+matplotlib==3.5.2
+sunpy==4.0.5
+etframes @ git+https://github.com/gpelouze/etframes.git
+papy @ git+https://github.com/gpelouze/papy@v2022.8.24
