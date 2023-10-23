@@ -1,11 +1,18 @@
-3D MHD simulations of propagating kink waves in open field lines using PLUTO.
+# 3D MHD simulations of kink waves cutoff through the solar transition region with PLUTO.
 
-Directories description:
+This repository contains the setups and analysis code used for the paper [Pelouze et al. 2023, A&A 672, A105](https://doi.org/10.1051/0004-6361/202245049).
 
-- `setups/`: file for several PLUTO setups, each described in their respective
-  README. The interesting setups are `open_chromos_3D` (3D simulations with
-  chromosphere and transition region), and `open_chromos_relax_2D` (2D
-  relaxation run, which output is used to initialize the `open_chromos_3D`
-  runs).
-- `testing_and_fumbling/`: tests and verification scripts, mostly deprecated,
-  and probably partly broken.
+This features files to simulate the propagation of kink waves through the transition region, and study their cutoff.
+
+## Directories description
+
+- `setups/`: PLUTO setup files (see their respective README):
+  - `open_chromos_relax_2D`: 2D flux tube relaxation
+  - `open_chromos_3D`: 3D kink wave propagation
+- `conversion/relax_2D_to_3D.py`: converts the output of the 2D relaxation runs to input files for the 3D simulations.
+- `mock/`: Python scripts that replicate some C functions from the PLUTO setup.
+- `viz/`: Python scripts to analyze simulation output and make plots:
+  - `viz/paper_kink_cutoff.py` and `viz/paper_vrw_av.py`: makes the plots shown in the paper
+  - `viz/amplitude_altitude_cut_3D.py` computes the wave amplitude (`ampl_alt_data.npz`)
+  - `viz/phase_altitude_3D.py` computes the phase `phase_amplitude_data.npz` files
+  - remaining files are dependencies of the above.
