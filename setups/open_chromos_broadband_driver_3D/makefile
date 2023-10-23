@@ -1,1 +1,0 @@
-ARCH = Linux.mpicc.defs
